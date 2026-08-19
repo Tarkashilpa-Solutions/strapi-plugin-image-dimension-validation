@@ -1,0 +1,71 @@
+{
+  "version": "1.0.0",
+  "keywords": [],
+  "type": "commonjs",
+  "exports": {
+    "./package.json": "./package.json",
+    "./strapi-admin": {
+      "types": "./dist/admin/src/index.d.ts",
+      "source": "./admin/src/index.ts",
+      "import": "./dist/admin/index.mjs",
+      "require": "./dist/admin/index.js",
+      "default": "./dist/admin/index.js"
+    },
+    "./strapi-server": {
+      "types": "./dist/server/src/index.d.ts",
+      "source": "./server/src/index.ts",
+      "import": "./dist/server/index.mjs",
+      "require": "./dist/server/index.js",
+      "default": "./dist/server/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "strapi-plugin build",
+    "watch": "strapi-plugin watch",
+    "watch:link": "strapi-plugin watch:link",
+    "verify": "strapi-plugin verify",
+    "test:ts:front": "tsc -p admin/tsconfig.json",
+    "test:ts:back": "tsc -p server/tsconfig.json"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@strapi/strapi": "^5.51.2",
+    "@strapi/sdk-plugin": "^6.1.1",
+    "prettier": "^3.9.6",
+    "@strapi/design-system": "^2.2.4",
+    "@strapi/icons": "^2.2.4",
+    "react-intl": "^6.8.9",
+    "react": "^18.3.1",
+    "react-router-dom": "^6.30.4",
+    "@types/react": "^18.3.31",
+    "@strapi/typescript-utils": "^5.51.2",
+    "typescript": "^5.9.3",
+    "yup": "^0.32.9"
+  },
+  "peerDependencies": {
+    "@strapi/admin": "^5.31.3",
+    "@strapi/strapi": "^5.31.3",
+    "@strapi/utils": "^5.31.3",
+    "@strapi/sdk-plugin": "^6.1.1",
+    "@strapi/design-system": ">=2.0.0-rc.18 <3.0.0",
+    "@strapi/icons": ">=2.0.0-rc.18 <3.0.0",
+    "react-intl": "^6.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.0.0",
+    "yup": "^0.32.9"
+  },
+  "strapi": {
+    "kind": "plugin",
+    "name": "image-validation",
+    "displayName": "Image Validation",
+    "description": "Validates images selected through Strapi's Media Library against configurable aspect ratio and dimension requirements."
+  },
+  "name": "strapi-plugin-image-validation",
+  "description": "Validates images selected through Strapi's Media Library against configurable aspect ratio and dimension requirements.",
+  "license": "MIT",
+  "author": "prayash-c <prayash.chettri@tarkashilpa.com>"
+}
