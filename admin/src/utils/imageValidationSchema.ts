@@ -183,11 +183,9 @@ export const buildImageValidationSchema = (args: any[]): Record<string, yup.AnyS
         if (!hasRules(value)) {
           return true;
         }
-        // `allowedTypes` not set → all media types are allowed → images are allowed.
-        if (!Array.isArray(allowedTypes)) {
-          return true;
-        }
-        return allowedTypes.includes('images');
+        // Image validation rules require 'images' to be explicitly present
+        // in `allowedTypes`.
+        return Array.isArray(allowedTypes) && allowedTypes.includes('images');
       }
     );
 

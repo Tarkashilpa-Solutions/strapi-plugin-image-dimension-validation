@@ -234,7 +234,7 @@ const ImageValidationInput: React.FC<ImageValidationInputProps> = ({
                             <Field.Label>W</Field.Label>
 
                             <NumberInput
-                              value={rule?.aspectRatio?.width ?? 'NaN'}
+                              value={rule?.aspectRatio?.width ? rule.aspectRatio.width : 'NaN'}
                               min={1}
                               step={1}
                               onValueChange={(width: number | undefined) => {
@@ -257,7 +257,7 @@ const ImageValidationInput: React.FC<ImageValidationInputProps> = ({
                             <Field.Label>H</Field.Label>
 
                             <NumberInput
-                              value={rule?.aspectRatio?.height ?? 'NaN'}
+                              value={rule?.aspectRatio?.height ? rule.aspectRatio.height : 'NaN'}
                               min={1}
                               step={1}
                               onValueChange={(height: number | undefined) => {
@@ -280,7 +280,7 @@ const ImageValidationInput: React.FC<ImageValidationInputProps> = ({
                       <Field.Label>Minimum Width</Field.Label>
 
                       <NumberInput
-                        value={rule?.minWidth ?? 'NaN'}
+                        value={rule?.minWidth ? rule.minWidth : 'NaN'}
                         min={0}
                         step={1}
                         onValueChange={(minWidth: number | undefined) => {

@@ -1,5 +1,5 @@
 import { Box, Typography } from '@strapi/design-system';
-import { useField, useNotification } from '@strapi/admin/strapi-admin';
+import { useField, useForm, useNotification } from '@strapi/admin/strapi-admin';
 import React from 'react';
 
 import { validateImage, formatRule, type ImageValidationOptions } from '../utils/validateImage';
@@ -32,6 +32,29 @@ const MissingNativeFieldNotice = () => (
   </Box>
 );
 
+let warnedMissingFormContext = false;
+
+const warnMissingFormContext = () => {
+  if (warnedMissingFormContext) {
+    return;
+  }
+
+  warnedMissingFormContext = true;
+  console.warn(
+    "[image-validation] Could not connect to Strapi's form state, so validation is disabled for this field. " +
+      'This usually means the admin bundle contains two copies of @strapi/admin. ' +
+      "Add '@strapi/admin' to resolve.dedupe in the app's src/admin/vite.config.js, or install the plugin via yalc / npm pack instead of npm link."
+  );
+};
+
+const MissingFormContextNotice = () => (
+  <Box padding={2} background="warning100" borderColor="warning600" hasRadius>
+    <Typography variant="pi" textColor="warning600">
+      Image Validation is unavailable for this field, it could not connect to the form state.
+    </Typography>
+  </Box>
+);
+
 const getAspectRatioHint = (validation: ImageValidationOptions | undefined) => {
   if (!validation?.rules?.length) {
     return null;
@@ -56,9 +79,14 @@ export const ValidatedMediaField = (props: any) => {
   const imageValidation: ImageValidationOptions | undefined =
     attribute?.pluginOptions?.imageValidation;
 
-  // Fields without image-validation rules need no validation, hooks, or wrapper
-  // markup.
-  if (!imageValidation) {
+  // Image validation rules can only apply when 'images' is explicitly
+  // selected in the media field's `allowedTypes`.
+  const allowedTypes = attribute?.allowedTypes;
+  const imagesAllowed = Array.isArray(allowedTypes) && allowedTypes.includes('images');
+
+  // Fields without image-validation rules, or that don't allow images, need no
+  // validation, hooks, or wrapper markup.
+  if (!imageValidation || !imagesAllowed) {
     if (!NativeMediaField) {
       warnMissingNativeField();
 
@@ -72,6 +100,20 @@ export const ValidatedMediaField = (props: any) => {
 
   const { value, onChange } = useField(name);
   const { toggleNotification } = useNotification();
+  console.log('media ', value);
+
+  // Detect a missing Form context (e.g. duplicate @strapi/admin copies) so we
+  // can warn instead of silently skipping validation.
+  const getFormValues = useForm('ValidatedMediaField', (state) => state.getValues);
+  const hasFormContext = React.useMemo(() => {
+    try {
+      getFormValues();
+
+      return true;
+    } catch {
+      return false;
+    }
+  }, [getFormValues]);
 
   const lastValidValueRef = React.useRef(value);
   const revertingRef = React.useRef(false);
@@ -88,6 +130,7 @@ export const ValidatedMediaField = (props: any) => {
 
     const assets = toAssetArray(value);
     const failure = assets
+      .filter((asset) => asset?.mime?.startsWith('image/'))
       .map((asset) => validateImage(asset, imageValidation))
       .find((result) => !result.valid);
 
@@ -112,9 +155,15 @@ export const ValidatedMediaField = (props: any) => {
     return <MissingNativeFieldNotice />;
   }
 
+  if (!hasFormContext) {
+    warnMissingFormContext();
+  }
+
   return (
     <Box>
       <NativeMediaField {...props} />
+
+      {!hasFormContext && <MissingFormContextNotice />}
 
       {hint && (
         <Box paddingTop={1}>

@@ -71,65 +71,6 @@ const plugin: StrapiApp['appPlugins'][string] = {
       type: 'media',
       Component: ValidatedMediaField,
     });
-
-    /*--------------------------- Addition to Advanced Settings ------------------------------- */
-
-    // const contentTypeBuilder = app.getPlugin(
-    //   'content-type-builder'
-    // ) as unknown as ContentTypeBuilderPlugin;
-
-    // if (!contentTypeBuilder) {
-    //   console.error('[Image Validation] Content-Type Builder not found');
-    //   return;
-    // }
-
-    // const forms = contentTypeBuilder.apis.forms;
-
-    // if (!forms) {
-    //   console.error('[Image Validation] CTB forms API not found');
-    //   return;
-    // }
-
-    /*
-     * Register the custom input that will be rendered by TabForm.
-     *
-     * The ID must match the `type` used in the Advanced Form item below.
-     */
-    // forms.components.add({
-    //   id: 'image-validation',
-    //   component: ImageValidationInput,
-    // });
-
-    /*
-     * Extend the native Media field.
-     *
-     * Because there is no `sectionTitle`, Strapi's
-     * addItemsToFormSection() adds this item to the existing
-     * default Advanced Settings section.
-     */
-    // forms.extendFields(['media'], {
-    //   /*
-    //    * The validation schema lives in `utils/imageValidationSchema.ts`.
-    //    * `args[3]` is the `{ modifiedData, initialData }` options object passed by
-    //    * the Content-Type Builder, used to read the field's `allowedTypes`.
-    //    */
-    //   validator: (...args) => buildImageValidationSchema(args),
-
-    //   form: {
-    //     advanced: () => [
-    //       {
-    //         name: 'pluginOptions.imageValidation',
-    //         type: 'image-validation',
-    //         intlLabel: {
-    //           id: 'image-validation.settings',
-    //           defaultMessage: 'Image Validation',
-    //         },
-    //       },
-    //     ],
-
-    //     base: () => [],
-    //   },
-    // });
   },
 
   registerTrads({ locales }) {

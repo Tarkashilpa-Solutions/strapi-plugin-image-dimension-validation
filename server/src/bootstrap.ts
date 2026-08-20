@@ -27,6 +27,9 @@ const extractFileIds = (value: unknown): number[] => {
   }).filter((id): id is number => typeof id === "number");
 };
 
+const allowsImages = (allowedTypes: unknown): boolean =>
+  Array.isArray(allowedTypes) && allowedTypes.includes("images");
+
 const bootstrap = ({ strapi }: { strapi: Core.Strapi }) => {
   strapi.documents.use(async (context, next) => {
     if (context.action !== "create" && context.action !== "update") {
@@ -44,6 +47,7 @@ const bootstrap = ({ strapi }: { strapi: Core.Strapi }) => {
       ([fieldName, attribute]: [string, any]) =>
         attribute?.type === "media" &&
         attribute?.options?.imageValidation &&
+        allowsImages(attribute.allowedTypes) &&
         Object.prototype.hasOwnProperty.call(data, fieldName)
     );
 
