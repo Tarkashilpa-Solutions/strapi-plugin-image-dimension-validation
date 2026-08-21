@@ -85,6 +85,8 @@ nbproject
 .tsbuildinfo
 .eslintcache
 .env
+.env.*
+!.env.example
 
 
 ############################

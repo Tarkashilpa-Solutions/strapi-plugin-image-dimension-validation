@@ -66,6 +66,13 @@ const bootstrap = ({ strapi }: { strapi: Core.Strapi }) => {
         select: ['id', 'width', 'height'],
       });
 
+      const uniqueFileIds = [...new Set(fileIds)];
+      if (files.length !== uniqueFileIds.length) {
+        throw new errors.ValidationError(
+          `${fieldName}: One or more referenced files could not be found.`
+        );
+      }
+
       for (const file of files) {
         const result = validateImage(file, validation);
 

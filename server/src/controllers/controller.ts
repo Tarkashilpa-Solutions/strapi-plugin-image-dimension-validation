@@ -3,11 +3,14 @@ import type { Context } from "koa";
 
 const controller = ({ strapi }: { strapi: Core.Strapi }) => ({
   index(ctx: Context) {
-    ctx.body = strapi
-      .plugin("image-validation")
-      // the name of the service file & the method.
-      .service("service")
-      .getWelcomeMessage();
+    try {
+      const plugin = strapi.plugin("image-validation");
+      ctx.body = plugin.service("service").getWelcomeMessage();
+    } catch (err) {
+      ctx.status = 500;
+      ctx.body = { error: "Failed to retrieve welcome message" };
+      strapi.log.error(err);
+    }
   },
 });
 

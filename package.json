@@ -20,7 +20,9 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "admin",
+    "server"
   ],
   "scripts": {
     "build": "strapi-plugin build",
@@ -49,7 +51,6 @@
     "@strapi/admin": "^5.31.3",
     "@strapi/design-system": ">=2.0.0-rc.18 <3.0.0",
     "@strapi/icons": ">=2.0.0-rc.18 <3.0.0",
-    "@strapi/sdk-plugin": "^6.1.1",
     "@strapi/strapi": "^5.31.3",
     "@strapi/utils": "^5.31.3",
     "react": "^18.0.0",
