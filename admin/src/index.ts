@@ -135,8 +135,10 @@ const plugin: StrapiApp['appPlugins'][string] = {
     forms.extendFields(['media'], {
       /*
        * The validation schema lives in `utils/imageValidationSchema.ts`.
-       * `args[3]` is the `{ modifiedData, initialData }` options object passed by
-       * the Content-Type Builder, used to read the field's `allowedTypes`.
+       * The Content-Type Builder wraps the validator arguments in a single
+       * packed array, so the `{ modifiedData, initialData }` options object
+       * (used to read the field's `allowedTypes`) is at `args[0][3]`. The
+       * schema builder normalizes this internally.
        */
       validator: (...args) => buildImageValidationSchema(args),
 

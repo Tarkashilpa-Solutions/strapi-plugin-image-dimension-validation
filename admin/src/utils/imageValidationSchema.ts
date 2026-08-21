@@ -95,12 +95,18 @@ const aspectRatioKey = (width: number, height: number): string => {
  * `imageValidation` object itself via `.test()`, which produces the error
  * exactly at `pluginOptions.imageValidation`.
  *
- * `args[3]` is the options object passed to `forms.forms.attribute.schema()`:
- * `{ modifiedData, initialData }`. `modifiedData.allowedTypes` holds the current
- * "Allowed media types" selection of the media attribute being edited.
+ * The validator is invoked by CTB's `makeValidator([...], ...)` as:
+ *
+ *     makeValidator(['attribute', 'media'], shape, usedNames, reserved,
+ *                   takenTargetAttrs, { modifiedData, initialData })
+ *the current "Allowed media types" selection) is located at `args[0][3]`.
+ *
+ * To tolerate both call shapes (packed single-array from CTB, and the flat
+ * spread shape historically expected), the extractor below normalizes first.
  */
 export const buildImageValidationSchema = (args: any[]): Record<string, yup.AnySchema> => {
-  const attributeData = args[3] as AttributeFormData | undefined;
+  const optionsArray = Array.isArray(args?.[0]) ? args[0] : args;
+  const attributeData = optionsArray?.[3] as AttributeFormData | undefined;
   const allowedTypes = attributeData?.modifiedData?.allowedTypes;
 
   const imageValidation = yup

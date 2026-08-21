@@ -100,7 +100,6 @@ export const ValidatedMediaField = (props: any) => {
 
   const { value, onChange } = useField(name);
   const { toggleNotification } = useNotification();
-  console.log('media ', value);
 
   // Detect a missing Form context (e.g. duplicate @strapi/admin copies) so we
   // can warn instead of silently skipping validation.
