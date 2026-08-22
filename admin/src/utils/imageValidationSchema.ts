@@ -43,17 +43,12 @@ const hasRules = (value: unknown): value is ImageValidationValue =>
     (value as ImageValidationValue).rules.length > 0
   );
 
-const toFiniteNumber = (value: unknown): number => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-
 /**
  * Whether a value is an actual, present finite number. Used for required-field
  * checks so that a missing field (undefined) is rejected while an explicit `0`
  * is still treated as "filled in".
  */
-const isPresentNumber = (value: unknown): boolean =>
+const isPresentNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value);
 
 const gcd = (a: number, b: number): number => {
@@ -99,25 +94,35 @@ const aspectRatioKey = (width: number, height: number): string => {
  *
  *     makeValidator(['attribute', 'media'], shape, usedNames, reserved,
  *                   takenTargetAttrs, { modifiedData, initialData })
- *the current "Allowed media types" selection) is located at `args[0][3]`.
+ * The { modifiedData, initialData } options object (containing the current
+ * "Allowed media types" selection) is located at `args[0][3]`.
  *
  * To tolerate both call shapes (packed single-array from CTB, and the flat
  * spread shape historically expected), the extractor below normalizes first.
  */
-export const buildImageValidationSchema = (args: any[]): Record<string, yup.AnySchema> => {
-  const optionsArray = Array.isArray(args?.[0]) ? args[0] : args;
-  const attributeData = optionsArray?.[3] as AttributeFormData | undefined;
-  const allowedTypes = attributeData?.modifiedData?.allowedTypes;
+export const buildImageValidationSchema = (args: unknown[]): Record<string, yup.AnySchema> => {
+  // CTB's makeValidator wraps arguments in a single packed array:
+  //   makeValidator(['attribute', 'media'], shape, usedNames, reserved,
+  //                 takenTargetAttrs, { modifiedData, initialData })
+  // The { modifiedData, initialData } options object lands at args[0][3].
+  const optionsArray = Array.isArray(args?.[0]) ? (args[0] as unknown[]) : args;
+  const attributeData = (optionsArray?.[3] as AttributeFormData) ?? null;
+
+  // When attributeData is unreachable (CTB structural change), treat it
+  // as "not available" so the schema doesn't block users from configuring
+  // rules; runtime enforcement handles the actual image-type check.
+  const allowedTypes: string[] | undefined =
+    attributeData?.modifiedData?.allowedTypes;
 
   const imageValidation = yup
     .object({
       rules: yup.array().of(
         yup.object({
           aspectRatio: yup.object({
-            width: yup.number().required(),
-            height: yup.number().required(),
+            width: yup.number(),
+            height: yup.number(),
           }),
-          minWidth: yup.number().required(),
+          minWidth: yup.number(),
         })
       ),
     })
@@ -144,9 +149,14 @@ export const buildImageValidationSchema = (args: any[]): Record<string, yup.AnyS
           return true;
         }
         return value.rules.every((rule) => {
-          const width = toFiniteNumber(rule?.aspectRatio?.width);
-          const height = toFiniteNumber(rule?.aspectRatio?.height);
-          return width !== 0 && height !== 0;
+          const width = rule?.aspectRatio?.width;
+          const height = rule?.aspectRatio?.height;
+          // Only validate ratio when both values are present; absence is
+          // already caught by image-validation-required.
+          if (!isPresentNumber(width) || !isPresentNumber(height)) {
+            return true;
+          }
+          return width > 0 && height > 0;
         });
       }
     )
@@ -155,9 +165,13 @@ export const buildImageValidationSchema = (args: any[]): Record<string, yup.AnyS
         return true;
       }
       return value.rules.every((rule) => {
-        const width = toFiniteNumber(rule?.aspectRatio?.width);
-        const height = toFiniteNumber(rule?.aspectRatio?.height);
-        const minWidth = toFiniteNumber(rule?.minWidth);
+        const width = rule?.aspectRatio?.width;
+        const height = rule?.aspectRatio?.height;
+        const minWidth = rule?.minWidth;
+        // Skip absent values — required check handles them.
+        if (!isPresentNumber(width) || !isPresentNumber(height) || !isPresentNumber(minWidth)) {
+          return true;
+        }
         return width >= 0 && height >= 0 && minWidth >= 0;
       });
     })
@@ -170,10 +184,13 @@ export const buildImageValidationSchema = (args: any[]): Record<string, yup.AnyS
         }
         const seen = new Set<string>();
         return value.rules.every((rule) => {
-          const key = aspectRatioKey(
-            toFiniteNumber(rule?.aspectRatio?.width),
-            toFiniteNumber(rule?.aspectRatio?.height)
-          );
+          const width = rule?.aspectRatio?.width;
+          const height = rule?.aspectRatio?.height;
+          // Skip rules with absent dimensions.
+          if (!isPresentNumber(width) || !isPresentNumber(height)) {
+            return true;
+          }
+          const key = aspectRatioKey(width, height);
           if (seen.has(key)) {
             return false;
           }

@@ -3,15 +3,16 @@ import {
   Box,
   Button,
   Dialog,
-  Divider,
   Flex,
   Field,
   NumberInput,
+  Tooltip,
   Typography,
 } from '@strapi/design-system';
 import { WarningCircle } from '@strapi/icons';
 
 type ImageValidationRule = {
+  id: string;
   aspectRatio: {
     width?: number;
     height?: number;
@@ -43,7 +44,12 @@ type ImageValidationInputProps = {
   };
 };
 
+let nextRuleId = 0;
+
+const MAX_RULES = 10;
+
 const createEmptyRule = (): ImageValidationRule => ({
+  id: `rule-${++nextRuleId}-${Math.random().toString(36).slice(2, 9)}`,
   aspectRatio: {
     width: undefined,
     height: undefined,
@@ -69,6 +75,7 @@ const normalizeValue = (value?: ImageValidationValue | null): ImageValidationVal
 
   return {
     rules: value.rules.map((rule) => ({
+      id: rule?.id ?? `rule-${Math.random().toString(36).slice(2, 9)}`,
       aspectRatio: {
         width: toOptionalNumber(rule?.aspectRatio?.width),
         height: toOptionalNumber(rule?.aspectRatio?.height),
@@ -83,6 +90,8 @@ const ImageValidationInput: React.FC<ImageValidationInputProps> = ({
   value,
   onChange,
   error,
+  intlLabel,
+  description,
 }) => {
   const currentValue = useMemo(() => normalizeValue(value), [value]);
 
@@ -97,6 +106,9 @@ const ImageValidationInput: React.FC<ImageValidationInputProps> = ({
     if (error && error !== lastError) {
       setLastError(error);
       setIsErrorDialogOpen(true);
+    }
+    if (!error) {
+      setLastError(undefined);
     }
   }, [error, lastError]);
 
@@ -144,6 +156,10 @@ const ImageValidationInput: React.FC<ImageValidationInputProps> = ({
   );
 
   const addRule = useCallback(() => {
+    if (currentValue.rules.length >= MAX_RULES) {
+      return;
+    }
+
     updateValue({
       rules: [...currentValue.rules, createEmptyRule()],
     });
@@ -163,9 +179,9 @@ const ImageValidationInput: React.FC<ImageValidationInputProps> = ({
   // freshly added (blank) rule doesn't immediately light up with errors.
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  const markTouched = useCallback((index: number, field: 'width' | 'height' | 'minWidth') => {
+  const markTouched = useCallback((ruleId: string, field: 'width' | 'height' | 'minWidth') => {
     setTouched((prev) => {
-      const key = `${index}-${field}`;
+      const key = `${ruleId}-${field}`;
       if (prev[key]) {
         return prev;
       }
@@ -174,15 +190,15 @@ const ImageValidationInput: React.FC<ImageValidationInputProps> = ({
   }, []);
 
   const fieldError = (
-    index: number,
+    ruleId: string,
     field: 'width' | 'height' | 'minWidth',
     value: number | undefined
   ): string | undefined => {
-    if (!touched[`${index}-${field}`]) {
+    if (!touched[`${ruleId}-${field}`]) {
       return undefined;
     }
 
-    if (value === undefined || value === null) {
+    if (value === undefined) {
       return 'This field is required.';
     }
 
@@ -198,102 +214,121 @@ const ImageValidationInput: React.FC<ImageValidationInputProps> = ({
       <Field.Root
         name={name}
         error={error}
-        hint="Define the aspect ratio and minimum width required for uploaded images."
+        hint={
+          description?.defaultMessage ??
+          description?.id ??
+          'Define the aspect ratio and minimum width required for uploaded images.'
+        }
       >
-        <Field.Label>Image Validation</Field.Label>
+        <Field.Label variant="omega" fontWeight="regular">
+          {intlLabel?.defaultMessage ?? intlLabel?.id ?? 'Image Validation'}
+        </Field.Label>
+        <Typography variant="pi" textColor="neutral400">
+          Define the required aspect ratio and minimum width for images
+        </Typography>
 
         <Box paddingTop={2}>
           {currentValue.rules.length === 0 ? (
-            <Box padding={4} background="neutral100" borderRadius="4px">
-              <Typography textColor="neutral600">No image validation rules configured.</Typography>
+            <Box padding={2} background="neutral100" borderRadius="4px">
+              <Typography textColor="neutral600" variant="pi">
+                No image validation rules configured.
+              </Typography>
             </Box>
           ) : (
             <Flex direction="column" alignItems="stretch" gap={4}>
               {currentValue.rules.map((rule, index) => (
-                <Box key={index} padding={4} background="neutral100" borderRadius="4px">
+                <Box key={rule.id} padding={4} background="neutral100" borderRadius="4px">
                   <Flex direction="column" alignItems="stretch" gap={4}>
                     <Flex justifyContent="space-between" alignItems="center">
-                      <Typography variant="delta">Rule {index + 1}</Typography>
+                      <Typography variant="omega">Rule {index + 1}</Typography>
 
                       <Button variant="tertiary" size="S" onClick={() => removeRule(index)}>
                         Remove
                       </Button>
                     </Flex>
 
-                    <Divider />
+                    <Flex
+                      direction={{ initial: 'row', medium: 'row', large: 'column' }}
+                      gap={4}
+                      alignItems="start"
+                    >
+                      {/* Ratio */}
+                      <Flex direction="column" gap={1} alignItems="start">
+                        <Typography variant="pi" fontWeight="semiBold">
+                          Ratio
+                        </Typography>
 
-                    {/* Ratio */}
-                    <Box>
-                      <Typography variant="pi" fontWeight="semiBold">
-                        Ratio
-                      </Typography>
+                        <Flex gap={4} alignItems="start">
+                          <Box flex="1">
+                            <Field.Root
+                              error={fieldError(rule.id, 'width', rule?.aspectRatio?.width)}
+                            >
+                              <NumberInput
+                                value={rule?.aspectRatio?.width}
+                                min={1}
+                                step={1}
+                                onValueChange={(width: number | undefined) => {
+                                  updateRule(index, {
+                                    aspectRatio: {
+                                      width: width,
+                                    },
+                                  });
+                                }}
+                                onBlur={() => markTouched(rule.id, 'width')}
+                                size="S"
+                              />
+                              <Field.Error />
+                            </Field.Root>
+                          </Box>
 
-                      <Flex gap={4} paddingTop={2} alignItems="start">
-                        <Box flex="1">
-                          <Field.Root error={fieldError(index, 'width', rule?.aspectRatio?.width)}>
-                            <Field.Label>W</Field.Label>
-
-                            <NumberInput
-                              value={rule?.aspectRatio?.width ? rule.aspectRatio.width : 'NaN'}
-                              min={1}
-                              step={1}
-                              onValueChange={(width: number | undefined) => {
-                                updateRule(index, {
-                                  aspectRatio: {
-                                    width: width,
-                                  },
-                                });
-                              }}
-                              onBlur={() => markTouched(index, 'width')}
-                            />
-                            <Field.Error />
-                          </Field.Root>
-                        </Box>
-
-                        <Box flex="1">
-                          <Field.Root
-                            error={fieldError(index, 'height', rule?.aspectRatio?.height)}
-                          >
-                            <Field.Label>H</Field.Label>
-
-                            <NumberInput
-                              value={rule?.aspectRatio?.height ? rule.aspectRatio.height : 'NaN'}
-                              min={1}
-                              step={1}
-                              onValueChange={(height: number | undefined) => {
-                                updateRule(index, {
-                                  aspectRatio: {
-                                    height: height,
-                                  },
-                                });
-                              }}
-                              onBlur={() => markTouched(index, 'height')}
-                            />
-                            <Field.Error />
-                          </Field.Root>
-                        </Box>
+                          <Box flex="1">
+                            <Field.Root
+                              error={fieldError(rule.id, 'height', rule?.aspectRatio?.height)}
+                            >
+                              <NumberInput
+                                value={rule?.aspectRatio?.height}
+                                min={1}
+                                step={1}
+                                onValueChange={(height: number | undefined) => {
+                                  updateRule(index, {
+                                    aspectRatio: {
+                                      height: height,
+                                    },
+                                  });
+                                }}
+                                onBlur={() => markTouched(rule.id, 'height')}
+                                size="S"
+                              />
+                              <Field.Error />
+                            </Field.Root>
+                          </Box>
+                        </Flex>
                       </Flex>
-                    </Box>
 
-                    {/* Minimum width */}
-                    <Field.Root error={fieldError(index, 'minWidth', rule?.minWidth)}>
-                      <Field.Label>Minimum Width</Field.Label>
+                      {/* Minimum width */}
+                      <Box flex="1" width="100%">
+                        <Field.Root
+                          error={fieldError(rule.id, 'minWidth', rule?.minWidth)}
+                          hint="Minimum image width in pixels."
+                        >
+                          <Field.Label>Minimum Width</Field.Label>
 
-                      <NumberInput
-                        value={rule?.minWidth ? rule.minWidth : 'NaN'}
-                        min={0}
-                        step={1}
-                        onValueChange={(minWidth: number | undefined) => {
-                          updateRule(index, {
-                            minWidth: minWidth,
-                          });
-                        }}
-                        onBlur={() => markTouched(index, 'minWidth')}
-                      />
-
-                      <Field.Hint>Minimum image width in pixels.</Field.Hint>
-                      <Field.Error />
-                    </Field.Root>
+                          <NumberInput
+                            value={rule?.minWidth}
+                            min={0}
+                            step={1}
+                            onValueChange={(minWidth: number | undefined) => {
+                              updateRule(index, {
+                                minWidth: minWidth,
+                              });
+                            }}
+                            onBlur={() => markTouched(rule.id, 'minWidth')}
+                            size="S"
+                          />
+                          <Field.Error />
+                        </Field.Root>
+                      </Box>
+                    </Flex>
                   </Flex>
                 </Box>
               ))}
@@ -301,9 +336,18 @@ const ImageValidationInput: React.FC<ImageValidationInputProps> = ({
           )}
 
           <Box paddingTop={4}>
-            <Button variant="secondary" onClick={addRule}>
-              + Add rule
-            </Button>
+            <Tooltip
+              label={`Maximum number of rules added. You cannot add more than ${MAX_RULES} image validation rules.`}
+              open={currentValue.rules.length >= MAX_RULES ? undefined : false}
+            >
+              <Button
+                variant="secondary"
+                onClick={addRule}
+                disabled={currentValue.rules.length >= MAX_RULES}
+              >
+                + Add rule
+              </Button>
+            </Tooltip>
           </Box>
         </Box>
 

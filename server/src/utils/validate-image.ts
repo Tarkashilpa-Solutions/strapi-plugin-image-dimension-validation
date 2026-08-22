@@ -90,6 +90,9 @@ export const validateImage = (
     const targetRatio = getRatio(rule.aspectRatio);
     return (
       targetRatio !== undefined &&
+      typeof rule.minWidth === 'number' &&
+      Number.isFinite(rule.minWidth) &&
+      rule.minWidth >= 0 &&
       Math.abs(actualRatio - targetRatio) / targetRatio <= RATIO_TOLERANCE
     );
   });
@@ -101,12 +104,13 @@ export const validateImage = (
     };
   }
 
-  const matchedRule = ratioMatchedRules.find((rule) => file.width >= rule.minWidth);
+  const matchedRule = ratioMatchedRules.some((rule) => file.width >= rule.minWidth);
 
   if (!matchedRule) {
+    const minWidthRule = ratioMatchedRules.reduce((a, b) => (a.minWidth <= b.minWidth ? a : b));
     return {
       valid: false,
-      message: `Image is ${file.width}px wide, but the minimum width for ${formatRatio(ratioMatchedRules[0].aspectRatio)} is ${Math.min(...ratioMatchedRules.map((rule) => rule.minWidth))}px.`,
+      message: `Image is ${file.width}px wide, but the minimum width for ${formatRatio(minWidthRule.aspectRatio)} is ${minWidthRule.minWidth}px.`,
     };
   }
 

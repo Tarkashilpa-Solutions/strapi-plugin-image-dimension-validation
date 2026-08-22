@@ -1,12 +1,19 @@
 import { Box, Typography } from '@strapi/design-system';
-import { useField, useForm, useNotification } from '@strapi/admin/strapi-admin';
+import { useField, useNotification } from '@strapi/admin/strapi-admin';
 import React from 'react';
 
 import { validateImage, formatRule, type ImageValidationOptions } from '../utils/validateImage';
 
-let NativeMediaField: React.ComponentType<any> | undefined;
+type MediaAsset = {
+  id?: number;
+  mime?: string;
+  width?: number | null;
+  height?: number | null;
+};
 
-export const setNativeMediaField = (component: React.ComponentType<any>) => {
+let NativeMediaField: React.ComponentType<Record<string, unknown>> | undefined;
+
+export const setNativeMediaField = (component: React.ComponentType<Record<string, unknown>>) => {
   NativeMediaField = component;
 };
 
@@ -27,30 +34,7 @@ const warnMissingNativeField = () => {
 const MissingNativeFieldNotice = () => (
   <Box padding={2} background="danger100" borderColor="danger500" hasRadius>
     <Typography variant="pi" textColor="danger600">
-      Image Validation plugin failed to initialize &mdash; media field unavailable.
-    </Typography>
-  </Box>
-);
-
-let warnedMissingFormContext = false;
-
-const warnMissingFormContext = () => {
-  if (warnedMissingFormContext) {
-    return;
-  }
-
-  warnedMissingFormContext = true;
-  console.warn(
-    "[image-validation] Could not connect to Strapi's form state, so validation is disabled for this field. " +
-      'This usually means the admin bundle contains two copies of @strapi/admin. ' +
-      "Add '@strapi/admin' to resolve.dedupe in the app's src/admin/vite.config.js, or install the plugin via yalc / npm pack instead of npm link."
-  );
-};
-
-const MissingFormContextNotice = () => (
-  <Box padding={2} background="warning100" borderColor="warning600" hasRadius>
-    <Typography variant="pi" textColor="warning600">
-      Image Validation is unavailable for this field, it could not connect to the form state.
+      Image Validation plugin failed to initialize, media field unavailable.
     </Typography>
   </Box>
 );
@@ -65,15 +49,26 @@ const getAspectRatioHint = (validation: ImageValidationOptions | undefined) => {
   return `Allowed aspect ratios: ${rules}`;
 };
 
-const toAssetArray = (value: any): any[] => {
+const toAssetArray = (value: unknown): MediaAsset[] => {
   if (Array.isArray(value)) {
-    return value;
+    return value as MediaAsset[];
   }
 
-  return value ? [value] : [];
+  return value ? [value as MediaAsset] : [];
 };
 
-export const ValidatedMediaField = (props: any) => {
+type MediaFieldProps = {
+  name: string;
+  attribute?: {
+    type?: string;
+    allowedTypes?: string[];
+    pluginOptions?: {
+      imageValidation?: ImageValidationOptions;
+    };
+  };
+};
+
+export const ValidatedMediaField = (props: MediaFieldProps) => {
   const { name, attribute } = props;
 
   const imageValidation: ImageValidationOptions | undefined =
@@ -84,42 +79,33 @@ export const ValidatedMediaField = (props: any) => {
   const allowedTypes = attribute?.allowedTypes;
   const imagesAllowed = Array.isArray(allowedTypes) && allowedTypes.includes('images');
 
-  // Fields without image-validation rules, or that don't allow images, need no
-  // validation, hooks, or wrapper markup.
-  if (!imageValidation || !imagesAllowed) {
-    if (!NativeMediaField) {
-      warnMissingNativeField();
-
-      return <MissingNativeFieldNotice />;
-    }
-
-    return <NativeMediaField {...props} />;
-  }
-
-  const hint = getAspectRatioHint(imageValidation);
-
   const { value, onChange } = useField(name);
   const { toggleNotification } = useNotification();
 
-  // Detect a missing Form context (e.g. duplicate @strapi/admin copies) so we
-  // can warn instead of silently skipping validation.
-  const getFormValues = useForm('ValidatedMediaField', (state) => state.getValues);
-  const hasFormContext = React.useMemo(() => {
-    try {
-      getFormValues();
-
-      return true;
-    } catch {
-      return false;
-    }
-  }, [getFormValues]);
-
   const lastValidValueRef = React.useRef(value);
   const revertingRef = React.useRef(false);
+  const mountedRef = React.useRef(false);
+
+  // Track when the component has finished its initial mount so we don't
+  // treat an asynchronous initial load as a user edit.
+  React.useEffect(() => {
+    mountedRef.current = true;
+  }, []);
 
   React.useEffect(() => {
+    if (!imageValidation || !imagesAllowed) {
+      return;
+    }
+
     if (revertingRef.current) {
       revertingRef.current = false;
+      return;
+    }
+
+    // On initial mount, capture the resolved value without validation
+    // so persisted data that may not meet the latest rules is preserved.
+    if (!mountedRef.current) {
+      lastValidValueRef.current = value;
       return;
     }
 
@@ -145,8 +131,7 @@ export const ValidatedMediaField = (props: any) => {
     }
 
     lastValidValueRef.current = value;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }, [value, imageValidation, imagesAllowed, name, onChange, toggleNotification]);
 
   if (!NativeMediaField) {
     warnMissingNativeField();
@@ -154,15 +139,17 @@ export const ValidatedMediaField = (props: any) => {
     return <MissingNativeFieldNotice />;
   }
 
-  if (!hasFormContext) {
-    warnMissingFormContext();
+  // Fields without image-validation rules, or that don't allow images,
+  // render the native media component without any validation wrapper.
+  if (!imageValidation || !imagesAllowed) {
+    return <NativeMediaField {...props} />;
   }
+
+  const hint = getAspectRatioHint(imageValidation);
 
   return (
     <Box>
       <NativeMediaField {...props} />
-
-      {!hasFormContext && <MissingFormContextNotice />}
 
       {hint && (
         <Box paddingTop={1}>

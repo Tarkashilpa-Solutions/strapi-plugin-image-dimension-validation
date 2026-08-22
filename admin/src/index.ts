@@ -13,6 +13,7 @@ type CTBValidator = ImageValidationValidator;
 type CTBFormsAPI = {
   components: {
     inputs: Record<string, unknown>;
+    // CTB passes props at runtime so a precise compile-time type is not statically knowable.
     add: (params: { id: string; component: React.ComponentType<any> }) => void;
   };
   extendFields: (
@@ -20,8 +21,8 @@ type CTBFormsAPI = {
     config: {
       validator?: CTBValidator;
       form: {
-        advanced: (props: any) => any[];
-        base: (props: any) => any[];
+        advanced: (props: Record<string, unknown>) => Array<Record<string, unknown>>;
+        base: (props: Record<string, unknown>) => Array<Record<string, unknown>>;
       };
     }
   ) => void;
@@ -54,7 +55,8 @@ const plugin: StrapiApp['appPlugins'][string] = {
       name: PLUGIN_ID,
     });
 
-    const nativeMediaField = (app as any).library?.fields?.media;
+    const nativeMediaField = (app as { library?: { fields?: Record<string, React.ComponentType> } })
+      .library?.fields?.media;
 
     if (!nativeMediaField) {
       console.warn(
@@ -89,7 +91,11 @@ const plugin: StrapiApp['appPlugins'][string] = {
           }
 
           return { data: newData, locale };
-        } catch {
+        } catch (error) {
+          console.warn(
+            `[image-validation] Failed to load translations for locale "${locale}"`,
+            error
+          );
           return { data: {}, locale };
         }
       })
