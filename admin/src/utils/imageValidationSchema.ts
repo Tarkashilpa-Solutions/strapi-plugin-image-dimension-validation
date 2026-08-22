@@ -94,7 +94,8 @@ const aspectRatioKey = (width: number, height: number): string => {
  *
  *     makeValidator(['attribute', 'media'], shape, usedNames, reserved,
  *                   takenTargetAttrs, { modifiedData, initialData })
- *the current "Allowed media types" selection) is located at `args[0][3]`.
+ * The { modifiedData, initialData } options object (containing the current
+ * "Allowed media types" selection) is located at `args[0][3]`.
  *
  * To tolerate both call shapes (packed single-array from CTB, and the flat
  * spread shape historically expected), the extractor below normalizes first.
@@ -118,10 +119,10 @@ export const buildImageValidationSchema = (args: unknown[]): Record<string, yup.
       rules: yup.array().of(
         yup.object({
           aspectRatio: yup.object({
-            width: yup.number().required(),
-            height: yup.number().required(),
+            width: yup.number(),
+            height: yup.number(),
           }),
-          minWidth: yup.number().required(),
+          minWidth: yup.number(),
         })
       ),
     })

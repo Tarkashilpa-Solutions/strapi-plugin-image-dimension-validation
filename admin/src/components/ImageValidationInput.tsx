@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Dialog,
-  Divider,
   Flex,
   Field,
   NumberInput,

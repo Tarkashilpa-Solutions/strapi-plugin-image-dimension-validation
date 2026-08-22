@@ -8,8 +8,13 @@ type InitializerProps = {
 
 const Initializer = ({ setPlugin }: InitializerProps) => {
   const ref = useRef(setPlugin);
+  ref.current = setPlugin;
+
+  const initializedRef = useRef(false);
 
   useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
     ref.current(PLUGIN_ID);
   }, []);
 

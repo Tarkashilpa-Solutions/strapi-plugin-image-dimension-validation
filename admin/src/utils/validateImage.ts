@@ -21,17 +21,13 @@ export interface ImageValidationResult {
 
 const RATIO_TOLERANCE = 0.02;
 
+const isValidDimension = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value) && value > 0;
+
 const getRatio = (aspectRatio: AspectRatio): number | undefined => {
   const { width, height } = aspectRatio ?? {};
 
-  if (
-    typeof width !== 'number' ||
-    typeof height !== 'number' ||
-    !Number.isFinite(width) ||
-    !Number.isFinite(height) ||
-    width <= 0 ||
-    height <= 0
-  ) {
+  if (!isValidDimension(width) || !isValidDimension(height)) {
     return undefined;
   }
 
@@ -66,12 +62,8 @@ export const validateImage = (
   }
 
   if (
-    typeof asset?.width !== 'number' ||
-    typeof asset?.height !== 'number' ||
-    !Number.isFinite(asset.width) ||
-    !Number.isFinite(asset.height) ||
-    asset.width <= 0 ||
-    asset.height <= 0
+    !isValidDimension(asset?.width) ||
+    !isValidDimension(asset?.height)
   ) {
     return {
       valid: false,

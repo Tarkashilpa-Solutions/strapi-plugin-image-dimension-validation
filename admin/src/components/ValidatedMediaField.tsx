@@ -4,9 +4,16 @@ import React from 'react';
 
 import { validateImage, formatRule, type ImageValidationOptions } from '../utils/validateImage';
 
-let NativeMediaField: React.ComponentType<any> | undefined;
+type MediaAsset = {
+  id?: number;
+  mime?: string;
+  width?: number | null;
+  height?: number | null;
+};
 
-export const setNativeMediaField = (component: React.ComponentType<any>) => {
+let NativeMediaField: React.ComponentType<Record<string, unknown>> | undefined;
+
+export const setNativeMediaField = (component: React.ComponentType<Record<string, unknown>>) => {
   NativeMediaField = component;
 };
 
@@ -27,7 +34,7 @@ const warnMissingNativeField = () => {
 const MissingNativeFieldNotice = () => (
   <Box padding={2} background="danger100" borderColor="danger500" hasRadius>
     <Typography variant="pi" textColor="danger600">
-      Image Validation plugin failed to initialize &mdash; media field unavailable.
+      Image Validation plugin failed to initialize, media field unavailable.
     </Typography>
   </Box>
 );
@@ -42,15 +49,26 @@ const getAspectRatioHint = (validation: ImageValidationOptions | undefined) => {
   return `Allowed aspect ratios: ${rules}`;
 };
 
-const toAssetArray = (value: any): any[] => {
+const toAssetArray = (value: unknown): MediaAsset[] => {
   if (Array.isArray(value)) {
-    return value;
+    return value as MediaAsset[];
   }
 
-  return value ? [value] : [];
+  return value ? [value as MediaAsset] : [];
 };
 
-export const ValidatedMediaField = (props: any) => {
+type MediaFieldProps = {
+  name: string;
+  attribute?: {
+    type?: string;
+    allowedTypes?: string[];
+    pluginOptions?: {
+      imageValidation?: ImageValidationOptions;
+    };
+  };
+};
+
+export const ValidatedMediaField = (props: MediaFieldProps) => {
   const { name, attribute } = props;
 
   const imageValidation: ImageValidationOptions | undefined =
