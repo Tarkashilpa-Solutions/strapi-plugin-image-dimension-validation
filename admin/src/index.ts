@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2026 Tarkashilpa Technologies
+ * Licensed under the MIT License.
+ */
+
+
 import { getTranslation } from './utils/getTranslation';
 import { PLUGIN_ID } from './pluginId';
 import { Initializer } from './components/Initializer';

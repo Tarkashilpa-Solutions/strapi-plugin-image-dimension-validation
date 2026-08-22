@@ -1,6 +1,15 @@
 {
   "version": "1.0.0",
-  "keywords": [],
+  "keywords": [
+    "strapi",
+    "plugin",
+    "image",
+    "validation",
+    "media-library",
+    "aspect-ratio",
+    "dimensions",
+    "image-validation"
+  ],
   "type": "commonjs",
   "exports": {
     "./package.json": "./package.json",
@@ -65,7 +74,7 @@
     "displayName": "Image Validation",
     "description": "Validates images selected through Strapi's Media Library against configurable aspect ratio and dimension requirements."
   },
-  "name": "strapi-plugin-image-validation",
+  "name": "@tarkashilpa/image-dimension-strapi-plugin",
   "description": "Validates images selected through Strapi's Media Library against configurable aspect ratio and dimension requirements.",
   "license": "MIT",
   "author": "prayash-c <prayash.chettri@tarkashilpa.com>"

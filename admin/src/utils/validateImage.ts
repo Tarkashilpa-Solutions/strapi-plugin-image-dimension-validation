@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2026 Tarkashilpa Technologies
+ * Licensed under the MIT License.
+ */
+
+
 export interface AspectRatio {
   width: number;
   height: number;

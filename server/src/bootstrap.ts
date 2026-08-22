@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2026 Tarkashilpa Technologies
+ * Licensed under the MIT License.
+ */
+
+
 import type { Core } from '@strapi/strapi';
 import { errors } from '@strapi/utils';
 

@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2026 Tarkashilpa Technologies
+ * Licensed under the MIT License.
+ */
+
+
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Box,
