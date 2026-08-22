@@ -24,18 +24,17 @@ For example:
 
 Strapi Image Validation allows developers to configure these requirements directly on individual Media fields.
 
-This helps reduce:
+Validation of image dimensions and resolution on the Strapi level prevents:
 
-- Incorrect image cropping
-- Inconsistent image proportions
-- Low-resolution images
-- Poor-quality website layouts
-- Manual image checking by content editors
+- Website layout breaking
+- Poor-quality images on the website
+- Images not fitting well on the website
+- Images getting clipped excessively
 
 ## Features
 
 - Validate images in Strapi Media fields.
-- Configure validation rules independently for each Media field.
+- Configure validation rules independently for each Media field from Strapi Content-Type builder.
 - Validate image aspect ratios.
 - Define a minimum image width.
 - Support multiple acceptable aspect ratio and width combinations.
@@ -400,7 +399,7 @@ When reporting a bug, include:
 
 <!-- Replace with the actual repository URL once available -->
 
-[Report an Issue](https://github.com/your-organization/strapi-plugin-image-validation/issues)
+[Report an Issue](https://github.com/Tarkashilpa-Solutions/strapi-plugin-image-dimension-validation/issues)
 
 ## Contributing
 
