@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2026 Tarkashilpa Technologies
+ * Licensed under the MIT License.
+ */
+
+
 import { Box, Typography } from '@strapi/design-system';
 import { useField, useNotification } from '@strapi/admin/strapi-admin';
 import React from 'react';

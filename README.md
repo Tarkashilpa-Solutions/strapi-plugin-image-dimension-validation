@@ -1,120 +1,57 @@
 # Strapi Image Validation
 
-A Strapi plugin that validates images uploaded through Media fields based on their **aspect ratio** and **minimum width**.
+A Strapi plugin that validates images uploaded through Media fields based on **aspect ratio** and **minimum width**.
 
-The plugin helps define image requirements directly at the CMS field level, reducing the need for content editors to manually test different images on the website.
+Configure image requirements directly in the Strapi Admin Panel and help content editors select images that meet the requirements of your website.
 
-## Overview
+<!-- Screenshot of the Image Validation configuration in Strapi Admin Panel -->
 
-Different sections of a website often require different types of images.
+![Strapi Image Validation](assets/screenshots/media-field-with-validation-hint.png)
 
-For example:
+When an invalid image is selected, a validation error is displayed as shown below:
 
-- A hero banner may require a wide `16:9` image.
-- A card may require a `4:3` image.
-- A profile or promotional image may require a square `1:1` image.
+![Strapi Image Validation Error](assets/screenshots/invalid-image-error.png)
 
-Without clear guidance in the CMS, content editors may upload images with incorrect dimensions or insufficient resolution. These issues are often discovered only after checking how the image appears on the frontend.
+## What is it?
 
-This can result in:
-
-- Incorrect cropping
-- Inconsistent layouts
-- Distorted image presentation
-- Low-quality or pixelated images
-- Manual trial and error when selecting images
-
-**Strapi Image Validation** addresses this by allowing image requirements to be configured directly on individual Media fields.
-
-## How It Works
-
-The plugin validates images using two criteria:
-
-- **Aspect Ratio** — defines the expected shape of the image.
-- **Minimum Width** — defines the minimum width, in pixels, required for the image.
+Different sections of a website often require images with specific proportions and resolutions.
 
 For example:
 
-```text
-Aspect Ratio: 16:9
-Minimum Width: 2048px
-```
+- Hero banner → `16:9`, minimum width `2048px`
+- Content card → `4:3`, minimum width `1600px`
+- Square promotional image → `1:1`, minimum width `1200px`
 
-An image must satisfy both requirements to match this rule.
+Strapi Image Validation allows developers to configure these requirements directly on individual Media fields.
 
-The following image would be valid:
+This helps reduce:
 
-```text
-2048 × 1152
-```
-
-A larger image with the same aspect ratio would also be valid:
-
-```text
-2560 × 1440
-3840 × 2160
-```
-
-## Why Aspect Ratio and Minimum Width?
-
-Requiring an exact image width and height can be unnecessarily restrictive.
-
-For example, all of the following images have a `16:9` aspect ratio:
-
-```text
-1920 × 1080
-2048 × 1152
-2560 × 1440
-3840 × 2160
-```
-
-Instead of requiring one exact dimension, the plugin separates the requirements into:
-
-```text
-Image Shape
-    ↓
-Aspect Ratio
-
-Image Resolution
-    ↓
-Minimum Width
-```
-
-This allows higher-resolution images to be used while ensuring that the image maintains the correct shape and has sufficient resolution.
-
-For example:
-
-```text
-Aspect Ratio: 16:9
-Minimum Width: 2048px
-```
-
-The following images are valid:
-
-```text
-2048 × 1152   ✓
-2560 × 1440   ✓
-3840 × 2160   ✓
-```
-
-The following image is invalid:
-
-```text
-1920 × 1080   ✗
-```
-
-Although it has the correct aspect ratio, its width is below the required minimum.
+- Incorrect image cropping
+- Inconsistent image proportions
+- Low-resolution images
+- Poor-quality website layouts
+- Manual image checking by content editors
 
 ## Features
 
 - Validate images in Strapi Media fields.
-- Configure validation rules per Media field.
+- Configure validation rules independently for each Media field.
 - Validate image aspect ratios.
-- Define a minimum width for each validation rule.
-- Support multiple aspect ratio and width combinations for a single field.
+- Define a minimum image width.
+- Support multiple acceptable aspect ratio and width combinations.
 - Allow different Media fields to have different image requirements.
-- Provide image requirements directly in the Content-Type Builder.
-- Support flexible image resolutions while maintaining the required image shape.
+- Configure validation directly from the Strapi Content-Type Builder.
+- Support higher-resolution images without requiring exact image dimensions.
+- Provide validation feedback when an image does not meet the configured requirements.
+
+## Compatibility
+
+| Requirement | Supported Version |
+| ----------- | ----------------- |
+| Strapi      | `^5.31.3`         |
+| Node.js     | `20.x`            |
+
+The plugin is built for **Strapi v5**.
 
 ## Installation
 
@@ -124,7 +61,7 @@ Install the plugin in your Strapi project:
 npm install strapi-plugin-image-validation
 ```
 
-After installation, rebuild the Strapi admin panel:
+After installation, rebuild the Strapi Admin Panel:
 
 ```bash
 npm run build
@@ -136,26 +73,9 @@ Then start Strapi:
 npm run develop
 ```
 
-The plugin is registered in Strapi using the plugin name:
-
-```text
-image-validation
-```
-
-## Compatibility
-
-This plugin supports:
-
-```text
-Strapi: ^5.31.3
-Node.js types: ^20
-```
-
-The plugin is built for Strapi v5.
-
 ## Configuration
 
-Image validation can be configured for individual Media fields from the Strapi Content-Type Builder.
+Image validation is configured independently for each Media field.
 
 Navigate to:
 
@@ -167,20 +87,31 @@ Content-Type Builder
                 → Image Validation
 ```
 
-The **Image Validation** section allows validation rules to be added to the Media field.
+<!-- Screenshot of the configuration section here -->
 
-Each rule contains:
+![Strapi Image Validation](assets/screenshots/image-validation-admin-configuration.gif)
 
-| Property      | Description                                     |
+### Basic Configuration
+
+Each validation rule contains:
+
+| Setting       | Description                                     |
 | ------------- | ----------------------------------------------- |
 | Aspect Ratio  | The required width-to-height ratio of the image |
 | Minimum Width | The minimum width of the image in pixels        |
 
-## Validation Rule Structure
+For example:
+
+```text
+Aspect Ratio: 16:9
+Minimum Width: 2048px
+```
+
+This means the image must have a `16:9` aspect ratio and a width of at least `2048px`.
+
+### Configuration Example
 
 The validation configuration is stored as part of the Media field configuration.
-
-Example:
 
 ```json
 {
@@ -198,14 +129,14 @@ Example:
 }
 ```
 
-The configuration above requires an image with:
+The configuration above requires:
 
 ```text
 Aspect Ratio: 16:9
 Minimum Width: 2048px
 ```
 
-## Multiple Validation Rules
+### Multiple Validation Rules
 
 A Media field can support multiple valid image formats.
 
@@ -241,9 +172,9 @@ For example:
 }
 ```
 
-In this example, the field accepts any image that satisfies **at least one** of the configured rules.
+In this example, the Media field accepts an image when it satisfies **at least one** of the configured rules.
 
-The validation logic can be represented as:
+The validation logic is:
 
 ```text
 Rule 1
@@ -253,7 +184,7 @@ Rule 2
 Rule 3
 ```
 
-Within each rule, both conditions must be satisfied:
+Each individual rule requires both conditions to be satisfied:
 
 ```text
 Aspect Ratio
@@ -269,23 +200,19 @@ For example:
 
 is one complete validation rule.
 
-## Minimum Width Is Rule-Specific
+### Minimum Width Is Rule-Specific
 
-Minimum width is configured independently for each aspect ratio rule.
+The minimum width is configured independently for each aspect ratio.
 
 For example:
 
 ```text
 16:9 → Minimum Width: 2048px
-
-4:3 → Minimum Width: 1600px
-
-1:1 → Minimum Width: 1200px
+4:3  → Minimum Width: 1600px
+1:1  → Minimum Width: 1200px
 ```
 
-This allows each supported image format to have its own resolution requirement.
-
-An image does not need to satisfy the minimum width requirements of every rule. It only needs to satisfy the minimum width associated with the aspect ratio rule it matches.
+An image only needs to satisfy the minimum width associated with the rule it matches.
 
 For example:
 
@@ -299,9 +226,9 @@ Rule 2
 Minimum Width: 1600px
 ```
 
-A `4:3` image with a width of `1600px` can pass Rule 2 without needing to meet the `2048px` minimum width defined for Rule 1.
+A `4:3` image with a width of `1600px` can pass Rule 2 without needing to meet the `2048px` minimum defined for Rule 1.
 
-## Aspect Ratio Tolerance
+### Aspect Ratio Tolerance
 
 Aspect ratio validation uses a fixed tolerance of:
 
@@ -309,153 +236,183 @@ Aspect ratio validation uses a fixed tolerance of:
 0.02
 ```
 
-The tolerance allows small variations when comparing an image's actual aspect ratio with the configured aspect ratio.
+This allows small variations when comparing the actual aspect ratio of an image with the configured aspect ratio.
 
-For example, an image does not need to match the configured ratio using exact mathematical equality.
+The tolerance is currently fixed and cannot be configured.
 
-The tolerance is fixed and cannot currently be configured.
+## Usage
 
-## Example Validation
+Once image validation has been configured for a Media field, images selected for that field are checked against the configured validation rules.
 
-Consider the following rule:
+An image is considered valid when:
 
-```json
-{
-  "aspectRatio": {
-    "width": 16,
-    "height": 9
-  },
-  "minWidth": 2048
-}
-```
+1. Its aspect ratio matches one of the configured aspect ratios within the allowed tolerance.
+2. Its width meets or exceeds the minimum width configured for that matching rule.
 
-### Valid Image
+### Valid Images
 
-```text
-2048 × 1152
-```
-
-✓ Correct aspect ratio
-✓ Meets the minimum width requirement
-
-### Valid Higher Resolution Image
-
-```text
-3840 × 2160
-```
-
-✓ Correct aspect ratio
-✓ Exceeds the minimum width requirement
-
-### Invalid: Width Too Small
-
-```text
-1920 × 1080
-```
-
-✓ Correct aspect ratio
-✗ Width is below `2048px`
-
-### Invalid: Incorrect Aspect Ratio
-
-```text
-2048 × 1536
-```
-
-✓ Meets the minimum width requirement
-✗ Does not match the configured `16:9` aspect ratio within the allowed tolerance
-
-## Example Use Cases
-
-### Hero Banner
-
-A hero banner may require a wide, high-resolution image:
+For the following rule:
 
 ```text
 Aspect Ratio: 16:9
 Minimum Width: 2048px
 ```
 
-This helps ensure that images used in large sections have sufficient resolution.
+The following images are valid:
 
-### Content Card
+```text
+2048 × 1152   ✓
+2560 × 1440   ✓
+3840 × 2160   ✓
+```
 
-A card component may require:
+Higher-resolution images with the same aspect ratio are also accepted.
+
+### Invalid Images
+
+An image with the correct aspect ratio but insufficient width is invalid:
+
+```text
+1920 × 1080   ✗
+```
+
+The aspect ratio is correct, but the width is below `2048px`.
+
+An image with sufficient width but an incorrect aspect ratio is also invalid:
+
+```text
+2048 × 1536   ✗
+```
+
+The width requirement is satisfied, but the image does not match the configured `16:9` aspect ratio within the allowed tolerance.
+
+### Example Use Cases
+
+#### Hero Banner
+
+```text
+Aspect Ratio: 16:9
+Minimum Width: 2048px
+```
+
+Useful for large website sections where a high-resolution, wide image is required.
+
+#### Content Card
 
 ```text
 Aspect Ratio: 4:3
 Minimum Width: 1600px
 ```
 
-This ensures consistent image proportions across card layouts.
+Useful for maintaining consistent image proportions across card layouts.
 
-### Square Image
-
-For square promotional images, tiles, or profile-style content:
+#### Square Image
 
 ```text
 Aspect Ratio: 1:1
 Minimum Width: 1200px
 ```
 
-## Validation Behavior
+Useful for promotional tiles, square content blocks, and profile-style images.
 
-When an image is selected for a Media field with Image Validation configured, the plugin checks the image against the configured validation rules.
+## Validation Logic
 
-An image is considered valid when:
+For a single validation rule:
 
-1. Its aspect ratio matches one of the configured aspect ratios within the fixed tolerance of `0.02`.
-2. Its width meets or exceeds the `minWidth` configured for that matching rule.
+```text
+Image
+  │
+  ├── Aspect Ratio matches?
+  │
+  └── Minimum Width satisfied?
+          │
+          ▼
+        Valid
+```
 
-If multiple rules are configured, satisfying any one rule is sufficient.
+For multiple rules:
 
-## Non-Image Media
+```text
+              ┌── Rule 1 ── Valid
+              │
+Image ────────┼── Rule 2 ── Valid
+              │
+              └── Rule 3 ── Invalid
+                    │
+                    ▼
+              Image is Valid
+```
 
-Image validation is intended for Media fields where images are required or allowed.
+An image only needs to satisfy **one complete rule**.
 
-The validation is based on image dimensions and therefore applies only to image assets.
+For example:
 
-For Media fields intended exclusively for images, image validation can be used to ensure that uploaded or selected assets meet the required dimensions.
+```text
+Rule 1: 16:9 + 2048px
+Rule 2: 4:3  + 1600px
+Rule 3: 1:1  + 1200px
+```
 
-## Benefits
+A `4:3` image that is `1600px` wide passes Rule 2 even if it does not satisfy Rule 1 or Rule 3.
 
-### For Content Editors
+## Troubleshooting
 
-Content editors can see the image requirements directly while configuring content instead of relying on separate documentation or manually testing images on the website.
+### Plugin does not appear in Strapi
 
-### For Developers
+Rebuild the Strapi Admin Panel:
 
-Image requirements can be configured at the content-model level and kept close to the Media field that uses them.
+```bash
+npm run build
+```
 
-### For Designers
+Then restart Strapi.
 
-Aspect ratios provide a clear and reusable way to communicate the expected image shape.
+### Image Validation settings are not visible
 
-### For Websites
+Make sure:
 
-Consistent image requirements can help reduce:
+- The plugin is installed correctly.
+- You are configuring a Media field.
+- The Strapi Admin Panel has been rebuilt after installation.
 
-- Unexpected image cropping
-- Layout inconsistencies
-- Low-resolution images
-- Incorrect image selection
-- Manual image testing
+### Image is rejected unexpectedly
 
-## Important Notes
+Check:
 
-Image validation ensures that an image meets the configured aspect ratio and minimum width requirements.
+- The configured aspect ratio.
+- The image's actual dimensions.
+- The configured minimum width.
+- The fixed aspect ratio tolerance of `0.02`.
 
-It does not guarantee that an image will always appear correctly in every frontend implementation.
+## Support & Issue Reporting
 
-The frontend may still apply:
+If you encounter a bug or have a feature request, please open an issue in the project's GitHub repository.
 
-- Cropping
-- `object-fit`
-- Responsive image sizing
-- Different container dimensions
-- Additional transformations
+When reporting a bug, include:
 
-This plugin should therefore be used as a **CMS-level validation layer** to ensure that uploaded or selected images meet the expected baseline requirements.
+- Strapi version
+- Node.js version
+- Plugin version
+- Steps to reproduce
+- Expected behavior
+- Actual behavior
+- Relevant configuration, if applicable
+
+<!-- Replace with the actual repository URL once available -->
+
+[Report an Issue](https://github.com/your-organization/strapi-plugin-image-validation/issues)
+
+## Contributing
+
+Contributions are welcome.
+
+1. Fork the repository.
+2. Create a feature branch.
+3. Make your changes.
+4. Add or update tests where applicable.
+5. Submit a pull request.
+
+For significant changes, please open an issue first to discuss the proposed approach.
 
 ## Roadmap
 
@@ -467,18 +424,8 @@ Possible future improvements include:
 - Image file size validation
 - Image format validation
 
+The roadmap may change based on project requirements and community feedback.
+
 ## License
 
-```text
-MIT
-```
-
-## Repository
-
-Add the source repository URL here.
-
-## Issues and Contributions
-
-If you encounter a bug, have a feature request, or would like to contribute, please use the project's repository.
-
-Contributions and feedback are welcome.
+This project is licensed under the [MIT License](LICENSE).
