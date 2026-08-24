@@ -1,0 +1,14 @@
+{
+  "extends": "../server/tsconfig.json",
+  "include": ["./**/*.ts"],
+  "compilerOptions": {
+    "rootDir": "..",
+    "noEmit": true,
+    "allowImportingTsExtensions": false,
+    "types": ["jest", "node"],
+    "paths": {
+      "@strapi/strapi": ["./node_modules/@strapi/strapi"],
+      "@strapi/utils": ["./node_modules/@strapi/utils"]
+    }
+  }
+}
