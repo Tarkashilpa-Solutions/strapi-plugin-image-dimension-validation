@@ -43,7 +43,7 @@
     "test": "jest --forceExit --detectOpenHandles",
     "test:unit": "jest --forceExit --testPathPatterns \"(server|admin).*src\"",
     "test:integration": "jest --forceExit --detectOpenHandles --testPathPatterns \"tests/integration\"",
-    "test:coverage": "jest --coverage --forceExit"
+    "test:coverage": "jest --coverage --forceExit --detectOpenHandles"
   },
   "jest": {
     "preset": "ts-jest",
