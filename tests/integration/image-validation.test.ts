@@ -39,15 +39,14 @@ describe('Image Validation Plugin — Integration', () => {
       where: { code: 'strapi-super-admin' },
     });
 
-    await strapi.query('admin::user').create({
-      data: {
-        firstname: 'Test',
-        lastname: 'Admin',
-        email: 'test-admin@test.com',
-        password: 'TestPass123!',
-        roles: [superAdminRole.id],
-        isActive: true,
-      },
+    // Use the admin user service (not query) so the password is properly hashed
+    await strapi.service('admin::user').create({
+      firstname: 'Test',
+      lastname: 'Admin',
+      email: 'test-admin@test.com',
+      password: 'TestPass123!',
+      roles: [superAdminRole.id],
+      isActive: true,
     });
 
     const res = await request(strapi.server.httpServer)
@@ -72,8 +71,21 @@ describe('Image Validation Plugin — Integration', () => {
         .set('Authorization', `Bearer ${adminJwt}`)
         .attach('files', buffer, name);
       const body = res.body;
-      const file = Array.isArray(body) ? body[0] : body;
-      return file?.id ?? file?.data?.id ?? 0;
+
+      // Handle array responses
+      if (Array.isArray(body)) {
+        const file = body[0];
+        return file?.id ?? file?.attributes?.id ?? 0;
+      }
+
+      // Handle nested data structure
+      if (body?.data) {
+        const file = Array.isArray(body.data) ? body.data[0] : body.data;
+        return file?.id ?? file?.attributes?.id ?? 0;
+      }
+
+      // Handle direct object response
+      return body?.id ?? body?.attributes?.id ?? 0;
     };
 
     validImageId = await uploadImage('valid-16x9.png', valid16x9());
