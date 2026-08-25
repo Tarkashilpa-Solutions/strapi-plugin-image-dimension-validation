@@ -115,12 +115,11 @@ export async function setupStrapi(): Promise<any> {
     if (fs.existsSync(srcPath) && !fs.existsSync(destPath)) {
       // Ensure parent directory exists before creating symlink
       fs.mkdirSync(path.dirname(destPath), { recursive: true });
-      // Use junction on Windows, symlink on Unix
+      // Try symlink first (fast & space-efficient), fall back to copy when
+      // symlinks are unavailable (Windows without privileges, CI quirks, etc.)
       try {
         fs.symlinkSync(srcPath, destPath, 'dir');
-      } catch (err) {
-        if (process.platform !== 'win32') throw err;
-        // Fallback for Windows: copy instead of symlink
+      } catch {
         fs.cpSync(srcPath, destPath, { recursive: true });
       }
     }
@@ -135,9 +134,8 @@ export async function setupStrapi(): Promise<any> {
   fs.mkdirSync(path.dirname(pluginDest), { recursive: true });
   try {
     fs.symlinkSync(pluginRoot, pluginDest, 'dir');
-  } catch (err) {
-    if (process.platform !== 'win32') throw err;
-    // Fallback for Windows: copy without .git/ and node_modules/
+  } catch {
+    // Fallback when symlinks are unavailable: copy without .git/ and node_modules/
     fs.cpSync(pluginRoot, pluginDest, {
       recursive: true,
       filter: (src) => {
