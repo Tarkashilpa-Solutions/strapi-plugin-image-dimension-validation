@@ -47,8 +47,8 @@ Validation of image dimensions and resolution on the Strapi level prevents:
 
 | Requirement | Supported Version |
 | ----------- | ----------------- |
-| Strapi      | `^5.31.3`         |
-| Node.js     | `20.x`            |
+| Strapi      | `5.0.0 and up`    |
+| Node.js     | `18.x and up`     |
 
 The plugin is built for **Strapi v5**.
 

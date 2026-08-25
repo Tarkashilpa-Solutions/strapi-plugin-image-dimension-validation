@@ -21,6 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         node-version:
+          - 18
           - 20
           - 22
           - 24
@@ -50,29 +51,37 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # ── Supported: minimum peer dependency ──
-          - strapi-version: '5.31.3'
-            node-version: 20
+          # ── Strapi 5.0.0 ──
+          - strapi-version: '5.0.0'
+            node-version: 18
             type: 'Supported'
-          - strapi-version: '5.31.3'
-            node-version: 22
-            type: 'Supported'
-          - strapi-version: '5.31.3'
-            node-version: 24
-            type: 'Supported'
-
-          # ── Current: latest Strapi with current Node LTS ──
-          - strapi-version: 'latest'
-            node-version: 22
-            type: 'Current'
-          - strapi-version: 'latest'
-            node-version: 24
-            type: 'Current'
-
-          # ── Experimental: oldest Strapi 5, needs --legacy-peer-deps ──
           - strapi-version: '5.0.0'
             node-version: 20
-            type: 'Experimental'
+            type: 'Supported'
+
+          # ── Strapi 5.31.0 ──
+          - strapi-version: '5.31.0'
+            node-version: 20
+            type: 'Supported'
+          - strapi-version: '5.31.0'
+            node-version: 22
+            type: 'Supported'
+          - strapi-version: '5.31.0'
+            node-version: 24
+            type: 'Supported'
+
+          # ── Strapi 5.48.1 ──
+          - strapi-version: '5.48.1'
+            node-version: 22
+            type: 'Supported'
+          - strapi-version: '5.48.1'
+            node-version: 24
+            type: 'Supported'
+
+          # ── Current: latest Strapi ──
+          - strapi-version: 'latest'
+            node-version: 24
+            type: 'Current'
 
     steps:
       - name: Checkout
@@ -96,17 +105,12 @@ jobs:
           cd /tmp/strapi-test
           npm init -y
 
-          INSTALL_FLAGS=""
-          if [ "${{ matrix.type }}" = "Experimental" ]; then
-            INSTALL_FLAGS="--legacy-peer-deps"
-          fi
-
-          npm install ${INSTALL_FLAGS} \
+          npm install \
             "@strapi/strapi@${{ matrix.strapi-version }}" \
             "@strapi/admin@${{ matrix.strapi-version }}" \
             "@strapi/plugin-users-permissions@${{ matrix.strapi-version }}"
 
-          npm install ${INSTALL_FLAGS} "${GITHUB_WORKSPACE}"
+          npm install "${GITHUB_WORKSPACE}"
 
           npx strapi version
 
@@ -120,6 +124,7 @@ jobs:
       fail-fast: false
       matrix:
         node-version:
+          - 18
           - 20
           - 22
           - 24
