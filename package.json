@@ -63,6 +63,10 @@
     "roots": [
       "<rootDir>/tests"
     ],
+    "collectCoverageFrom": [
+      "admin/src/**/*.{ts,tsx}",
+      "server/src/**/*.ts"
+    ],
     "moduleNameMapper": {
       "^@strapi/strapi$": "<rootDir>/tests/__mocks__/strapi.ts",
       "^@strapi/utils$": "<rootDir>/node_modules/@strapi/utils"

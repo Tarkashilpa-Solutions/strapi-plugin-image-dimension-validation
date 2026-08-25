@@ -237,6 +237,18 @@ describe('imageValidationSchema', () => {
       ).rejects.toThrow(/must only be used once/i);
     });
 
+    it('rejects duplicate 0:0 ratios (both width and height are zero)', async () => {
+      const value = {
+        rules: [
+          { aspectRatio: { width: 0, height: 0 }, minWidth: 100 },
+          { aspectRatio: { width: 0, height: 0 }, minWidth: 200 },
+        ],
+      };
+      await expect(
+        callValidator(value, { modifiedData: { allowedTypes: ['images'] } })
+      ).rejects.toThrow();
+    });
+
     it('accepts different normalized ratios (16:9 and 4:3)', async () => {
       const value = {
         rules: [

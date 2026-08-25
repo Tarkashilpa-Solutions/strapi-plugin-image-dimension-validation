@@ -95,6 +95,11 @@ export async function setupStrapi(): Promise<any> {
     ].join('\n')
   );
 
+  // ----- Uploads directory ---------------------------------------------------
+  // The local upload provider requires public/uploads/ to exist before init.
+  // Without it, strapi.load() throws and the admin models never register.
+  fs.mkdirSync(path.join(tempDir, 'public', 'uploads'), { recursive: true });
+
   // Symlink @strapi packages from the plugin's own node_modules
   const localNodeModules = path.resolve(pluginRoot, 'node_modules');
   const strapiPackages = [

@@ -283,6 +283,16 @@ describe('validateImage (server)', () => {
       );
       expect(result.message).toMatch(/400px wide/i);
     });
+
+    it('formats unknown for non-numeric aspect ratio in rejection message', () => {
+      const validation = opts({
+        aspectRatio: { width: 'a' as any, height: 'b' as any },
+        minWidth: 800,
+      });
+      const result = validateImage({ width: 500, height: 500 }, validation);
+      expect(result.valid).toBe(false);
+      expect(result.message).toMatch(/unknown/);
+    });
   });
 
   // ---- Large images --------------------------------------------------------

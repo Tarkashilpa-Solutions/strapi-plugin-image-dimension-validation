@@ -78,6 +78,12 @@ describe('validateImage (admin)', () => {
     });
   });
 
+  it('returns invalid when asset is null', () => {
+    const result = validateImage(null as any, opts(rule(16, 9, 800)));
+    expect(result.valid).toBe(false);
+    expect(result.message).toMatch(/Unable to determine/i);
+  });
+
   // ---- Exact ratio / tolerance / min width ---------------------------------
   it('accepts perfect 16:9 (1920×1080)', () => {
     expect(validateImage({ width: 1920, height: 1080 }, opts(rule(16, 9, 800))).valid).toBe(true);
@@ -104,6 +110,15 @@ describe('validateImage (admin)', () => {
     const result = validateImage({ width: 640, height: 360 }, opts(rule(16, 9, 800)));
     expect(result.valid).toBe(false);
     expect(result.message).toMatch(/640px wide/i);
+  });
+
+  it('rejects when below both matching min widths (exercises reduce callback)', () => {
+    const result = validateImage(
+      { width: 640, height: 360 },
+      opts(rule(16, 9, 2000), rule(16, 9, 1000))
+    );
+    expect(result.valid).toBe(false);
+    expect(result.message).toMatch(/1000px/i);
   });
 
   it('accepts when exactly at min width', () => {
@@ -134,6 +149,14 @@ describe('validateImage (admin)', () => {
     );
     expect(validateImage({ width: 1024, height: 768 }, rules).valid).toBe(true);
   });
+
+  it('skips rule with undefined aspectRatio', () => {
+    const rules = opts(
+      { aspectRatio: undefined as any, minWidth: 800 },
+      rule(4, 3, 600)
+    );
+    expect(validateImage({ width: 1024, height: 768 }, rules).valid).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -160,6 +183,12 @@ describe('formatRule (admin)', () => {
   it('formats unknown ratio for non-number dimensions', () => {
     expect(
       formatRule({ aspectRatio: { width: 'a' as any, height: 'b' as any }, minWidth: 100 })
+    ).toBe('unknown (min width 100px)');
+  });
+
+  it('formats unknown ratio when aspectRatio is undefined', () => {
+    expect(
+      formatRule({ aspectRatio: undefined as any, minWidth: 100 })
     ).toBe('unknown (min width 100px)');
   });
 });
