@@ -33,6 +33,17 @@ export async function setupStrapi(): Promise<any> {
   // Resolve the plugin root (parent of tests/)
   const pluginRoot = path.resolve(__dirname, '..', '..');
 
+  // Ensure the plugin has been built; Strapi's plugin loader resolves
+  // strapi-server / strapi-admin to ./dist/... via package.json exports
+  const distServer = path.join(pluginRoot, 'dist', 'server', 'index.js');
+  const distAdmin = path.join(pluginRoot, 'dist', 'admin', 'index.js');
+  if (!fs.existsSync(distServer) || !fs.existsSync(distAdmin)) {
+    throw new Error(
+      `Plugin dist/ not found at ${pluginRoot}. ` +
+        `Run "npm run build" before running integration tests.`
+    );
+  }
+
   // Create a minimal Strapi app in a temp directory
   tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'strapi-test-'));
   const srcAdminDir = path.join(tempDir, 'src', 'admin');
@@ -63,6 +74,27 @@ export async function setupStrapi(): Promise<any> {
   const nodeModulesDir = path.join(tempDir, 'node_modules');
   fs.mkdirSync(nodeModulesDir, { recursive: true });
 
+  // ----- Database configuration ----------------------------------------------
+  // Strapi v5 requires a config/database.js; without it, strapi.load() fails
+  // because @strapi/database needs connection.client to initialize.
+  const configDir = path.join(tempDir, 'config');
+  fs.mkdirSync(configDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(configDir, 'database.js'),
+    [
+      'module.exports = {',
+      "  connection: {",
+      "    client: 'sqlite',",
+      "    connection: {",
+      "      filename: ':memory:',",
+      '    },',
+      '    useNullAsDefault: true,',
+      '  },',
+      '};',
+      '',
+    ].join('\n')
+  );
+
   // Symlink @strapi packages from the plugin's own node_modules
   const localNodeModules = path.resolve(pluginRoot, 'node_modules');
   const strapiPackages = [
@@ -74,6 +106,7 @@ export async function setupStrapi(): Promise<any> {
     '@strapi/typescript-utils',
     '@strapi/plugin-upload',
     '@strapi/plugin-users-permissions',
+    'better-sqlite3',
   ];
 
   for (const pkg of strapiPackages) {
@@ -83,7 +116,8 @@ export async function setupStrapi(): Promise<any> {
       // Use junction on Windows, symlink on Unix
       try {
         fs.symlinkSync(srcPath, destPath, 'dir');
-      } catch {
+      } catch (err) {
+        if (process.platform !== 'win32') throw err;
         // Fallback for Windows: copy instead of symlink
         fs.cpSync(srcPath, destPath, { recursive: true });
       }
@@ -99,8 +133,16 @@ export async function setupStrapi(): Promise<any> {
   fs.mkdirSync(path.dirname(pluginDest), { recursive: true });
   try {
     fs.symlinkSync(pluginRoot, pluginDest, 'dir');
-  } catch {
-    fs.cpSync(pluginRoot, pluginDest, { recursive: true });
+  } catch (err) {
+    if (process.platform !== 'win32') throw err;
+    // Fallback for Windows: copy without .git/ and node_modules/
+    fs.cpSync(pluginRoot, pluginDest, {
+      recursive: true,
+      filter: (src) => {
+        const basename = path.basename(src);
+        return basename !== '.git' && basename !== 'node_modules';
+      },
+    });
   }
 
   // ----- Bootstrap Strapi ---------------------------------------------------

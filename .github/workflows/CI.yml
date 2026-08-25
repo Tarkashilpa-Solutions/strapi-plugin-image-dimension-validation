@@ -1,13 +1,21 @@
 name: CI
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     strategy:
       fail-fast: false
@@ -16,7 +24,6 @@ jobs:
           - 20
           - 22
           - 24
-          - 26
 
     steps:
       - name: Checkout
@@ -35,20 +42,37 @@ jobs:
         run: npm run build
 
   compatibility:
-    name: Strapi ${{ matrix.strapi-version }} / Node ${{ matrix.node-version }}
+    name: ${{ matrix.type }} — Strapi ${{ matrix.strapi-version }} / Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     strategy:
       fail-fast: false
       matrix:
-        node-version:
-          - 20
-          - 22
-          - 24
-          - 26
-        strapi-version:
-          - '5.0.0'
-          - '5.52.0'
+        include:
+          # ── Supported: minimum peer dependency ──
+          - strapi-version: '5.31.3'
+            node-version: 20
+            type: 'Supported'
+          - strapi-version: '5.31.3'
+            node-version: 22
+            type: 'Supported'
+          - strapi-version: '5.31.3'
+            node-version: 24
+            type: 'Supported'
+
+          # ── Current: latest Strapi with current Node LTS ──
+          - strapi-version: 'latest'
+            node-version: 22
+            type: 'Current'
+          - strapi-version: 'latest'
+            node-version: 24
+            type: 'Current'
+
+          # ── Experimental: oldest Strapi 5, needs --legacy-peer-deps ──
+          - strapi-version: '5.0.0'
+            node-version: 20
+            type: 'Experimental'
 
     steps:
       - name: Checkout
@@ -71,15 +95,25 @@ jobs:
           mkdir -p /tmp/strapi-test
           cd /tmp/strapi-test
           npm init -y
-          npm install \
+
+          INSTALL_FLAGS=""
+          if [ "${{ matrix.type }}" = "Experimental" ]; then
+            INSTALL_FLAGS="--legacy-peer-deps"
+          fi
+
+          npm install ${INSTALL_FLAGS} \
             "@strapi/strapi@${{ matrix.strapi-version }}" \
+            "@strapi/admin@${{ matrix.strapi-version }}" \
             "@strapi/plugin-users-permissions@${{ matrix.strapi-version }}"
-          npm install "${GITHUB_WORKSPACE}"
+
+          npm install ${INSTALL_FLAGS} "${GITHUB_WORKSPACE}"
+
           npx strapi version
 
   unit-tests:
     name: Unit Tests (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: build
 
     strategy:
@@ -89,7 +123,6 @@ jobs:
           - 20
           - 22
           - 24
-          - 26
 
     steps:
       - name: Checkout
@@ -110,6 +143,7 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: build
 
     steps:
@@ -125,12 +159,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build package
+        run: npm run build
+
       - name: Run integration tests
         run: npm run test:integration
 
   coverage:
     name: Coverage
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: build
 
     steps:
