@@ -77,7 +77,7 @@ const plugin: StrapiApp['appPlugins'][string] = {
 
     app.addFields({
       type: 'media',
-      Component: ValidatedMediaField,
+      Component: ValidatedMediaField as React.ComponentType<{}>,
     });
   },
 

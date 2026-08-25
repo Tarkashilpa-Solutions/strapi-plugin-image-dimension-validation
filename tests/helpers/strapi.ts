@@ -57,7 +57,7 @@ export async function setupStrapi(): Promise<any> {
     scripts: { build: 'strapi build', develop: 'strapi develop' },
     dependencies: {
       '@strapi/strapi': '*',
-      '@strapi/plugin-upload': '*',
+      '@strapi/upload': '*',
       '@strapi/plugin-users-permissions': '*',
     },
     strapi: { uuid: 'test-app' },
@@ -104,7 +104,7 @@ export async function setupStrapi(): Promise<any> {
     '@strapi/database',
     '@strapi/permissions',
     '@strapi/typescript-utils',
-    '@strapi/plugin-upload',
+    '@strapi/upload',
     '@strapi/plugin-users-permissions',
     'better-sqlite3',
   ];
@@ -113,6 +113,8 @@ export async function setupStrapi(): Promise<any> {
     const srcPath = path.join(localNodeModules, pkg);
     const destPath = path.join(nodeModulesDir, pkg);
     if (fs.existsSync(srcPath) && !fs.existsSync(destPath)) {
+      // Ensure parent directory exists before creating symlink
+      fs.mkdirSync(path.dirname(destPath), { recursive: true });
       // Use junction on Windows, symlink on Unix
       try {
         fs.symlinkSync(srcPath, destPath, 'dir');

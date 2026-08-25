@@ -33,6 +33,7 @@ describe('Image Validation Plugin — Integration', () => {
 
   beforeAll(async () => {
     const strapi = (global as any).strapi;
+    if (!strapi) throw new Error('Strapi instance not available — setupStrapi() may have failed');
 
     const superAdminRole = await strapi.query('admin::role').findOne({
       where: { code: 'strapi-super-admin' },
@@ -63,6 +64,7 @@ describe('Image Validation Plugin — Integration', () => {
 
   beforeAll(async () => {
     const strapi = (global as any).strapi;
+    if (!strapi) return;
 
     const uploadImage = async (name: string, buffer: Buffer): Promise<number> => {
       const res = await request(strapi.server.httpServer)
@@ -85,6 +87,7 @@ describe('Image Validation Plugin — Integration', () => {
 
   beforeAll(async () => {
     const strapi = (global as any).strapi;
+    if (!strapi) return;
 
     const ctBody = {
       contentType: {
