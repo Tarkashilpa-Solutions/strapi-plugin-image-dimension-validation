@@ -6,11 +6,13 @@ Configure image requirements directly in the Strapi Admin Panel and help content
 
 <!-- Screenshot of the Image Validation configuration in Strapi Admin Panel -->
 
-![Strapi Image Validation](assets/screenshots/media-field-with-validation-hint.png)
+![Strapi Image Validation](https://raw.githubusercontent.com/Tarkashilpa-Solutions/strapi-plugin-image-dimension-validation/refs/heads/main/assets/screenshots/media-field-with-validation-hint.png)
+
+
 
 When an invalid image is selected, a validation error is displayed as shown below:
 
-![Strapi Image Validation Error](assets/screenshots/invalid-image-error.png)
+![Strapi Image Validation Error](https://raw.githubusercontent.com/Tarkashilpa-Solutions/strapi-plugin-image-dimension-validation/refs/heads/main/assets/screenshots/invalid-image-error.png)
 
 ## What is it?
 
@@ -105,7 +107,7 @@ Content-Type Builder
 
 <!-- Screenshot of the configuration section here -->
 
-![Strapi Image Validation](assets/screenshots/image-validation-admin-configuration.gif)
+![Strapi Image Validation](https://raw.githubusercontent.com/Tarkashilpa-Solutions/strapi-plugin-image-dimension-validation/refs/heads/main/assets/screenshots/image-validation-admin-configuration.gif)
 
 ### Basic Configuration
 
