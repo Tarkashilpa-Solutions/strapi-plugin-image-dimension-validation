@@ -2,13 +2,15 @@
   "version": "1.0.1",
   "keywords": [
     "strapi",
-    "plugin",
-    "image",
-    "validation",
-    "media-library",
+    "strapi-plugin",
+    "strapi-v5",
+    "image-validation",
+    "image-dimensions",
+    "image-dimension-validation",
+    "image-size-validation",
     "aspect-ratio",
-    "dimensions",
-    "image-validation"
+    "media-library",
+    "media-validation"
   ],
   "type": "commonjs",
   "exports": {
