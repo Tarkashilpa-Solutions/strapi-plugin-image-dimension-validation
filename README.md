@@ -8,8 +8,6 @@ Configure image requirements directly in the Strapi Admin Panel and help content
 
 ![Strapi Image Validation](https://raw.githubusercontent.com/Tarkashilpa-Solutions/strapi-plugin-image-dimension-validation/refs/heads/main/assets/screenshots/media-field-with-validation-hint.png)
 
-
-
 When an invalid image is selected, a validation error is displayed as shown below:
 
 ![Strapi Image Validation Error](https://raw.githubusercontent.com/Tarkashilpa-Solutions/strapi-plugin-image-dimension-validation/refs/heads/main/assets/screenshots/invalid-image-error.png)
@@ -57,8 +55,8 @@ I’d update it to distinguish **supported Strapi versions** from the **recommen
 To verify compatibility, the plugin has been tested against the following
 Strapi and Node.js configurations:
 
-| Strapi Version | Node.js Version | Status |
-| -------------- | --------------- | ------ |
+| Strapi Version | Node.js Version | Status    |
+| -------------- | --------------- | --------- |
 | `5.0.0`        | `18.x`          | ✅ Tested |
 | `5.0.0`        | `20.x`          | ✅ Tested |
 | `5.31.0`       | `20.x`          | ✅ Tested |
@@ -446,4 +444,4 @@ The roadmap may change based on project requirements and community feedback.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](https://github.com/Tarkashilpa-Solutions/strapi-plugin-image-dimension-validation/blob/main/LICENSE).
