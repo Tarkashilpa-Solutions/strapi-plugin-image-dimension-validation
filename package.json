@@ -31,41 +31,88 @@
   "files": [
     "dist",
     "admin",
-    "server"
+    "server",
+    "strapi-server.js",
+    "strapi-admin.js"
   ],
+  "engines": {
+    "node": ">=18.0.0 <=24.x.x",
+    "npm": ">=6.0.0"
+  },
   "scripts": {
     "build": "strapi-plugin build",
     "watch": "strapi-plugin watch",
     "watch:link": "strapi-plugin watch:link",
     "verify": "strapi-plugin verify",
     "test:ts:front": "tsc -p admin/tsconfig.json",
-    "test:ts:back": "tsc -p server/tsconfig.json"
+    "test:ts:back": "tsc -p server/tsconfig.json",
+    "test": "jest --forceExit --detectOpenHandles",
+    "test:unit": "jest --forceExit --testPathPatterns \"(server|admin).*src\"",
+    "test:integration": "jest --forceExit --detectOpenHandles --testPathPatterns \"tests/integration\"",
+    "test:coverage": "jest --coverage --forceExit --detectOpenHandles"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      ".tmp",
+      ".cache",
+      "/dist/"
+    ],
+    "roots": [
+      "<rootDir>/tests"
+    ],
+    "collectCoverageFrom": [
+      "admin/src/**/*.{ts,tsx}",
+      "server/src/**/*.ts"
+    ],
+    "moduleNameMapper": {
+      "^@strapi/strapi$": "<rootDir>/tests/__mocks__/strapi.ts",
+      "^@strapi/utils$": "<rootDir>/node_modules/@strapi/utils"
+    },
+    "transform": {
+      "^.+\\.tsx?$": [
+        "ts-jest",
+        {
+          "tsconfig": "tests/tsconfig.json"
+        }
+      ]
+    }
+  },
+  "dependencies": {
+    "@strapi/design-system": "^2.0.0",
+    "@strapi/icons": "^2.0.0"
   },
   "devDependencies": {
-    "@strapi/admin": "^5.31.3",
-    "@strapi/design-system": "^2.2.4",
-    "@strapi/icons": "^2.2.4",
+    "@strapi/admin": "^5.0.0",
+    "@strapi/plugin-users-permissions": "^5.0.0",
     "@strapi/sdk-plugin": "^6.1.1",
-    "@strapi/strapi": "^5.31.3",
-    "@strapi/typescript-utils": "^5.51.2",
+    "@strapi/strapi": "^5.0.0",
+    "@strapi/typescript-utils": "^5.0.0",
+    "@types/jest": "^30.0.0",
     "@types/react": "^18.3.31",
+    "@types/supertest": "^7.2.1",
+    "better-sqlite3": "^12.11.1",
+    "jest": "^30.4.2",
     "prettier": "^3.9.6",
     "react": "^18.3.1",
     "react-intl": "^6.8.9",
     "react-router-dom": "^6.30.4",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.12",
     "typescript": "^5.9.3",
     "yup": "^0.32.9"
   },
   "peerDependencies": {
-    "@strapi/admin": "^5.31.3",
-    "@strapi/design-system": ">=2.0.0-rc.18 <3.0.0",
-    "@strapi/icons": ">=2.0.0-rc.18 <3.0.0",
-    "@strapi/strapi": "^5.31.3",
-    "@strapi/utils": "^5.31.3",
+    "@strapi/admin": "^5.0.0",
+    "@strapi/strapi": "^5.0.0",
+    "@strapi/utils": "^5.0.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-intl": "^6.0.0",
     "react-router-dom": "^6.0.0",
+    "styled-components": "^6.0.0",
     "yup": "^0.32.9"
   },
   "strapi": {
@@ -74,7 +121,7 @@
     "displayName": "Image Validation",
     "description": "Validates images selected through Strapi's Media Library against configurable aspect ratio and dimension requirements."
   },
-  "name": "@tarkashilpa/image-dimension-strapi-plugin",
+  "name": "@tarkashilpa/strapi-plugin-image-dimension-validation",
   "description": "Validates images selected through Strapi's Media Library against configurable aspect ratio and dimension requirements.",
   "license": "MIT",
   "author": "prayash-c <prayash.chettri@tarkashilpa.com>"

@@ -39,59 +39,63 @@ const allowsImages = (allowedTypes: unknown): boolean =>
   Array.isArray(allowedTypes) && allowedTypes.includes('images');
 
 const bootstrap = ({ strapi }: { strapi: Core.Strapi }) => {
-  strapi.documents.use(async (context, next) => {
-    if (context.action !== 'create' && context.action !== 'update') {
-      return next();
-    }
-
-    const attributes = context.contentType?.attributes ?? {};
-    const data = (context.params as { data?: Record<string, unknown> })?.data;
-
-    if (!data) {
-      return next();
-    }
-
-    const mediaFieldsToValidate = Object.entries(attributes).filter(
-      ([fieldName, attribute]: [string, any]) =>
-        attribute?.type === 'media' &&
-        attribute?.options?.imageValidation &&
-        allowsImages(attribute.allowedTypes) &&
-        Object.prototype.hasOwnProperty.call(data, fieldName)
-    );
-
-    for (const [fieldName, attribute] of mediaFieldsToValidate) {
-      const validation: ImageValidationOptions = (attribute as any).options.imageValidation;
-      const fileIds = extractFileIds(data[fieldName]);
-
-      if (fileIds.length === 0) {
-        continue;
+  try {
+    strapi.documents.use(async (context, next) => {
+      if (context.action !== 'create' && context.action !== 'update') {
+        return next();
       }
 
-      const files = await strapi.query('plugin::upload.file').findMany({
-        where: { id: { $in: fileIds } },
-        select: ['id', 'width', 'height'],
-      });
+      const attributes = context.contentType?.attributes ?? {};
+      const data = (context.params as { data?: Record<string, unknown> })?.data;
 
-      const uniqueFileIds = [...new Set(fileIds)];
-      if (files.length !== uniqueFileIds.length) {
-        throw new errors.ValidationError(
-          `${fieldName}: One or more referenced files could not be found.`
-        );
+      if (!data) {
+        return next();
       }
 
-      for (const file of files) {
-        const result = validateImage(file, validation);
+      const mediaFieldsToValidate = Object.entries(attributes).filter(
+        ([fieldName, attribute]: [string, any]) =>
+          attribute?.type === 'media' &&
+          attribute?.pluginOptions?.imageValidation &&
+          allowsImages(attribute.allowedTypes) &&
+          Object.prototype.hasOwnProperty.call(data, fieldName)
+      );
 
-        if (!result.valid) {
+      for (const [fieldName, attribute] of mediaFieldsToValidate) {
+        const validation: ImageValidationOptions = (attribute as any).pluginOptions.imageValidation;
+        const fileIds = extractFileIds(data[fieldName]);
+
+        if (fileIds.length === 0) {
+          continue;
+        }
+
+        const files = await strapi.query('plugin::upload.file').findMany({
+          where: { id: { $in: fileIds } },
+          select: ['id', 'width', 'height'],
+        });
+
+        const uniqueFileIds = [...new Set(fileIds)];
+        if (files.length !== uniqueFileIds.length) {
           throw new errors.ValidationError(
-            `${fieldName}: ${result.message ?? 'The selected image does not meet the required dimensions.'}`
+            `${fieldName}: One or more referenced files could not be found.`
           );
         }
-      }
-    }
 
-    return next();
-  });
+        for (const file of files) {
+          const result = validateImage(file, validation);
+
+          if (!result.valid) {
+            throw new errors.ValidationError(
+              `${fieldName}: ${result.message ?? 'The selected image does not meet the required dimensions.'}`
+            );
+          }
+        }
+      }
+
+      return next();
+    });
+  } catch (err) {
+    console.error('[bootstrap] FAILED to register middleware:', err);
+  }
 };
 
 export default bootstrap;

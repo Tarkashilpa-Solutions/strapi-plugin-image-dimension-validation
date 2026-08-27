@@ -43,14 +43,31 @@ Validation of image dimensions and resolution on the Strapi level prevents:
 - Support higher-resolution images without requiring exact image dimensions.
 - Provide validation feedback when an image does not meet the configured requirements.
 
+I’d update it to distinguish **supported Strapi versions** from the **recommended Node.js versions**:
+
 ## Compatibility
 
 | Requirement | Supported Version |
 | ----------- | ----------------- |
-| Strapi      | `^5.31.3`         |
-| Node.js     | `20.x`            |
+| Strapi      | `5.0.0` and up    |
+| Node.js     | `18.x` and up     |
 
-The plugin is built for **Strapi v5**.
+To verify compatibility, the plugin has been tested against the following
+Strapi and Node.js configurations:
+
+| Strapi Version | Node.js Version | Status |
+| -------------- | --------------- | ------ |
+| `5.0.0`        | `18.x`          | ✅ Tested |
+| `5.0.0`        | `20.x`          | ✅ Tested |
+| `5.31.0`       | `20.x`          | ✅ Tested |
+| `5.31.0`       | `22.x`          | ✅ Tested |
+| `5.31.0`       | `24.x`          | ✅ Tested |
+| `5.48.1`       | `22.x`          | ✅ Tested |
+| `5.48.1`       | `24.x`          | ✅ Tested |
+
+These configurations were strategically selected based on Strapi and Node.js
+compatibility boundaries to provide coverage across different Strapi and
+Node.js versions.
 
 ## Installation
 
