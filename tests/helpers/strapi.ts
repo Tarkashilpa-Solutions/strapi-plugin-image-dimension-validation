@@ -120,18 +120,23 @@ export async function setupStrapi(
     `export default { config: { locales: ['en'], translations: { en: {} } } };\n`
   );
 
-  // ---- Symlink plugin into node_modules ----
+  // ---- Copy plugin into node_modules (avoid symlinks to prevent resolution issues on CI) ----
   const nodeModulesDir = path.join(tempDir, 'node_modules');
   fs.mkdirSync(nodeModulesDir, { recursive: true });
 
-  // Link plugin so @tarkashilpa/<name> resolves (satisfies package.json dependency check)
+  const pluginCopyFilter = (name: string) => name !== '.git' && name !== 'node_modules';
+
+  // Install plugin so @tarkashilpa/<name> resolves (satisfies package.json dependency check)
   const pluginDest = path.join(
     nodeModulesDir,
     '@tarkashilpa',
     'strapi-plugin-image-dimension-validation'
   );
   fs.mkdirSync(path.dirname(pluginDest), { recursive: true });
-  linkOrCopy(pluginRoot, pluginDest, (name) => name !== '.git' && name !== 'node_modules');
+  fs.cpSync(pluginRoot, pluginDest, {
+    recursive: true,
+    filter: (src) => pluginCopyFilter(path.basename(src)),
+  });
 
   // Strapi v5's plugin loader scans node_modules/<name>, node_modules/@strapi/plugin-<name>,
   // or node_modules/strapi-plugin-<name>.  It does NOT traverse arbitrary scoped packages
@@ -139,7 +144,10 @@ export async function setupStrapi(
   // (The @tarkashilpa/<name> entry in package.json satisfies the dependency validation only.)
   const unscopedDest = path.join(nodeModulesDir, 'image-validation');
   if (!fs.existsSync(unscopedDest)) {
-    linkOrCopy(pluginRoot, unscopedDest, (name) => name !== '.git' && name !== 'node_modules');
+    fs.cpSync(pluginRoot, unscopedDest, {
+      recursive: true,
+      filter: (src) => pluginCopyFilter(path.basename(src)),
+    });
   }
 
   // ---- Database configuration ----
