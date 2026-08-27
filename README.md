@@ -52,13 +52,22 @@ I’d update it to distinguish **supported Strapi versions** from the **recommen
 | Strapi      | `5.0.0` and up    |
 | Node.js     | `18.x` and up     |
 
-The plugin supports **all Strapi v5 versions**. For the recommended Node.js version based on your Strapi version, see the table below:
+To verify compatibility, the plugin has been tested against the following
+Strapi and Node.js configurations:
 
-| **Strapi Version**  | **Recommended Node.js** | **Minimum Node.js** |
-| ------------------- | ----------------------- | ------------------- |
-| `5.48.1` and up     | `24.x`                  | `22.x`              |
-| `5.31.0` – `5.48.0` | `24.x`                  | `20.x`              |
-| `5.0.0` – `5.30.1`  | `20.x`                  | `18.x`              |
+| Strapi Version | Node.js Version | Status |
+| -------------- | --------------- | ------ |
+| `5.0.0`        | `18.x`          | ✅ Tested |
+| `5.0.0`        | `20.x`          | ✅ Tested |
+| `5.31.0`       | `20.x`          | ✅ Tested |
+| `5.31.0`       | `22.x`          | ✅ Tested |
+| `5.31.0`       | `24.x`          | ✅ Tested |
+| `5.48.1`       | `22.x`          | ✅ Tested |
+| `5.48.1`       | `24.x`          | ✅ Tested |
+
+These configurations were strategically selected based on Strapi and Node.js
+compatibility boundaries to provide coverage across different Strapi and
+Node.js versions.
 
 ## Installation
 
