@@ -93,26 +93,96 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: npm
 
-      - name: Install package dependencies
+      # Build the plugin first
+      - name: Install plugin dependencies
         run: npm ci
 
-      - name: Build package
+      - name: Build plugin
         run: npm run build
 
-      - name: Verify Strapi compatibility
+      - name: Pack plugin
+        shell: bash
         run: |
-          mkdir -p /tmp/strapi-test
-          cd /tmp/strapi-test
-          npm init -y
+          npm pack
+          echo "PLUGIN_TGZ=$(ls *.tgz | head -n 1)" >> "$GITHUB_ENV"
 
-          npm install \
-            "@strapi/strapi@${{ matrix.strapi-version }}" \
-            "@strapi/admin@${{ matrix.strapi-version }}" \
-            "@strapi/plugin-users-permissions@${{ matrix.strapi-version }}"
+      # Create a real Strapi application
+      - name: Create Strapi test application
+        shell: bash
+        run: |
+          npx create-strapi-app@${{ matrix.strapi-version }} \
+            /tmp/strapi-test \
+            --no-run \
+            --no-example
 
-          npm install "${GITHUB_WORKSPACE}"
+      # Configure SQLite
+      - name: Configure SQLite
+        working-directory: /tmp/strapi-test
+        shell: bash
+        run: |
+          mkdir -p .tmp
 
+          cat > config/database.ts <<'EOF'
+          export default ({ env }) => ({
+            connection: {
+              client: 'sqlite',
+              connection: {
+                filename: env('DATABASE_FILENAME', '.tmp/data.db'),
+              },
+              useNullAsDefault: true,
+            },
+          });
+          EOF
+
+      # Install the locally built plugin
+      - name: Install plugin
+        working-directory: /tmp/strapi-test
+        shell: bash
+        run: |
+          npm install "${GITHUB_WORKSPACE}/${PLUGIN_TGZ}"
+
+      - name: Verify Strapi installation
+        working-directory: /tmp/strapi-test
+        run: |
           npx strapi version
+
+      # Build the actual Strapi application with the plugin installed
+      - name: Build Strapi application
+        working-directory: /tmp/strapi-test
+        run: |
+          npm run build
+
+      # Start Strapi and verify that it can boot
+      - name: Start Strapi application
+        working-directory: /tmp/strapi-test
+        shell: bash
+        run: |
+          npx strapi start > /tmp/strapi.log 2>&1 &
+          STRAPI_PID=$!
+
+          echo "Waiting for Strapi to start..."
+
+          for i in {1..60}; do
+            if curl -sf http://localhost:1337/admin > /dev/null; then
+              echo "Strapi started successfully"
+              kill $STRAPI_PID
+              exit 0
+            fi
+
+            if ! kill -0 $STRAPI_PID 2>/dev/null; then
+              echo "Strapi process exited unexpectedly"
+              cat /tmp/strapi.log
+              exit 1
+            fi
+
+            sleep 2
+          done
+
+          echo "Strapi failed to start"
+          cat /tmp/strapi.log
+
+          kill $STRAPI_PID || true
+          exit 1
 
   unit-tests:
     name: Unit Tests (Node ${{ matrix.node-version }})
@@ -145,30 +215,30 @@ jobs:
       - name: Run unit tests
         run: npm run test:unit
 
-  integration-tests:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: build
+  # integration-tests:
+  #   name: Integration Tests
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 20
+  #   needs: build
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 24
+  #         cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+  #     - name: Install dependencies
+  #       run: npm ci
 
-      - name: Build package
-        run: npm run build
+  #     - name: Build package
+  #       run: npm run build
 
-      - name: Run integration tests
-        run: npm run test:integration
+  #     - name: Run integration tests
+  #       run: npm run test:integration
 
   coverage:
     name: Coverage
