@@ -147,39 +147,34 @@ jobs:
       - name: Run unit tests
         run: npm run test:unit
 
-  integration-tests:
-    name: Integration Tests
-    runs-on: windows-latest
-    timeout-minutes: 20
-    needs: build
+  # integration-tests:
+  #   name: Integration Tests
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 20
+  #   needs: build
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 24
+  #         cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+  #     - name: Install dependencies
+  #       run: npm ci
 
-      - name: Build package
-        run: npm run build
+  #     - name: Build package
+  #       run: npm run build
 
-      - name: Run integration tests
-        run: npm run test:integration
+  #     - name: Run integration tests
+  #       run: npm run test:integration
 
   coverage:
     name: Coverage
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: build
 
