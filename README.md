@@ -1,5 +1,9 @@
 # Strapi Image Validation
 
+[![CI](https://github.com/Tarkashilpa-Solutions/strapi-plugin-image-dimension-validation/actions/workflows/CI.yml/badge.svg)](https://github.com/Tarkashilpa-Solutions/strapi-plugin-image-dimension-validation/actions/workflows/CI.yml)
+[![npm version](https://img.shields.io/npm/v/@tarkashilpa/strapi-plugin-image-dimension-validation.svg)](https://www.npmjs.com/package/@tarkashilpa/strapi-plugin-image-dimension-validation)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Tarkashilpa-Solutions/strapi-plugin-image-dimension-validation/blob/main/LICENSE)
+
 A Strapi plugin that validates images uploaded through Media fields based on **aspect ratio** and **minimum width**.
 
 Configure image requirements directly in the Strapi Admin Panel and help content editors select images that meet the requirements of your website.
