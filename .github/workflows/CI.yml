@@ -5,6 +5,7 @@ concurrency:
   cancel-in-progress: true
 
 on:
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -94,162 +95,26 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: npm
 
-      - name: Show Node and npm versions
-        run: |
-          node --version
-          npm --version
-
-      - name: Install plugin dependencies
+      - name: Install package dependencies
         run: npm ci
 
-      - name: Build plugin
+      - name: Build package
         run: npm run build
 
-      - name: Pack plugin
-        shell: bash
+      - name: Verify Strapi compatibility
         run: |
-          npm pack
+          mkdir -p /tmp/strapi-test
+          cd /tmp/strapi-test
+          npm init -y
 
-          PLUGIN_TGZ=$(find . -maxdepth 1 -name "*.tgz" -print -quit)
+          npm install \
+            "@strapi/strapi@${{ matrix.strapi-version }}" \
+            "@strapi/admin@${{ matrix.strapi-version }}" \
+            "@strapi/plugin-users-permissions@${{ matrix.strapi-version }}"
 
-          if [ -z "$PLUGIN_TGZ" ]; then
-            echo "ERROR: Plugin package was not created"
-            exit 1
-          fi
+          npm install "${GITHUB_WORKSPACE}"
 
-          echo "Plugin package: $PLUGIN_TGZ"
-          echo "PLUGIN_TGZ=$PLUGIN_TGZ" >> "$GITHUB_ENV"
-
-      - name: Create Strapi test application
-        shell: bash
-        run: |
-          STRAPI_TEST_DIR="${RUNNER_TEMP}/strapi-test"
-
-          echo "Creating Strapi application at:"
-          echo "$STRAPI_TEST_DIR"
-
-          rm -rf "$STRAPI_TEST_DIR"
-
-          npx --yes create-strapi-app@${{ matrix.strapi-version }} \
-          "${RUNNER_TEMP}/strapi-test" \
-          --skip-cloud \
-          --no-run \
-          --no-example \
-          --typescript \
-          --dbclient sqlite
-
-      - name: Verify Strapi test application
-        shell: bash
-        run: |
-          STRAPI_TEST_DIR="${RUNNER_TEMP}/strapi-test"
-
-          if [ ! -d "$STRAPI_TEST_DIR" ]; then
-            echo "ERROR: Strapi test application was not created"
-            echo "Expected directory: $STRAPI_TEST_DIR"
-            exit 1
-          fi
-
-          echo "Strapi test application created successfully"
-          ls -la "$STRAPI_TEST_DIR"
-
-      - name: Configure SQLite
-        working-directory: ${{ runner.temp }}/strapi-test
-        shell: bash
-        run: |
-          mkdir -p .tmp
-
-          cat > config/database.ts <<'EOF'
-          export default ({ env }) => ({
-            connection: {
-              client: 'sqlite',
-              connection: {
-                filename: env('DATABASE_FILENAME', '.tmp/data.db'),
-              },
-              useNullAsDefault: true,
-            },
-          });
-          EOF
-
-          echo "SQLite configuration:"
-          cat config/database.ts
-
-      - name: Install plugin
-        working-directory: ${{ runner.temp }}/strapi-test
-        shell: bash
-        run: |
-          npm install "${GITHUB_WORKSPACE}/${PLUGIN_TGZ}"
-
-      - name: Verify Strapi and plugin installation
-        working-directory: ${{ runner.temp }}/strapi-test
-        shell: bash
-        run: |
-          echo "Expected Strapi version: ${{ matrix.strapi-version }}"
-          echo "Node version: $(node --version)"
-          echo "npm version: $(npm --version)"
-          echo
-
-          echo "Installed Strapi version:"
           npx strapi version
-
-          echo
-          echo "Installed image validation plugin:"
-          npm ls @tarkashilpa/strapi-plugin-image-dimension-validation 2>/dev/null || npm ls 2>/dev/null | grep -i image || true
-
-      - name: Build Strapi application
-        working-directory: ${{ runner.temp }}/strapi-test
-        run: |
-          npm run build
-
-      - name: Start Strapi application
-        working-directory: ${{ runner.temp }}/strapi-test
-        shell: bash
-        run: |
-          LOG_FILE="${RUNNER_TEMP}/strapi.log"
-
-          echo "Starting Strapi..."
-          npx strapi start > "$LOG_FILE" 2>&1 &
-
-          STRAPI_PID=$!
-
-          cleanup() {
-            echo "Stopping Strapi..."
-            kill "$STRAPI_PID" 2>/dev/null || true
-          }
-
-          trap cleanup EXIT
-
-          echo "Strapi PID: $STRAPI_PID"
-          echo "Waiting for Strapi to start..."
-
-          for i in {1..60}; do
-
-            if curl -sf http://localhost:1337/admin > /dev/null; then
-              echo "Strapi started successfully"
-              exit 0
-            fi
-
-            if ! kill -0 "$STRAPI_PID" 2>/dev/null; then
-              echo
-              echo "ERROR: Strapi process exited unexpectedly"
-              echo
-              echo "===== Strapi logs ====="
-              cat "$LOG_FILE"
-              echo "===== End Strapi logs ====="
-              exit 1
-            fi
-
-            echo "Waiting... ($i/60)"
-            sleep 2
-          done
-
-          echo
-          echo "ERROR: Strapi failed to start within 120 seconds"
-          echo
-          echo "===== Strapi logs ====="
-          cat "$LOG_FILE"
-          echo "===== End Strapi logs ====="
-
-          exit 1
 
   unit-tests:
     name: Unit Tests (Node ${{ matrix.node-version }})
@@ -282,9 +147,39 @@ jobs:
       - name: Run unit tests
         run: npm run test:unit
 
+  integration-tests:
+    name: Integration Tests
+    runs-on: windows-latest
+    timeout-minutes: 20
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build package
+        run: npm run build
+
+      - name: Run integration tests
+        run: npm run test:integration
+
   coverage:
     name: Coverage
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     needs: build
 
