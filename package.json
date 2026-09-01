@@ -123,6 +123,10 @@
     "displayName": "Image Validation",
     "description": "Validates images selected through Strapi's Media Library against configurable aspect ratio and dimension requirements."
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tarkashilpa-Solutions/strapi-plugin-image-dimension-validation.git"
+  },
   "name": "@tarkashilpa/strapi-plugin-image-dimension-validation",
   "description": "Validates images selected through Strapi's Media Library against configurable aspect ratio and dimension requirements.",
   "license": "MIT",
